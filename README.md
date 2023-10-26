@@ -15,7 +15,9 @@ I recommend watching the talk above, that gives you a good idea of why and how t
 - Every entity that may respond based on the GRS (NPCs, etc) have a `GrsEntity` attached to them. The `GrsEntity` emits signals which the entity can use to speak, do actions, etc.
 - Your game sends inputs to GRS whenever something that may need to be responded to happens. The system decides whether, and how to, respond.
 
-Here are some examples of how the Game, GRS, and NPCs may interact. Dashed lines are inputs and solid lines are signals emitted from the given `GrsEntity`:
+-----
+
+Here are some high-level examples of how the Game, GRS, and NPCs may interact. Dashed lines are queries sent to GRS and solid lines are signals emitted from the given `GrsEntity`:
 
 ```mermaid
 sequenceDiagram
@@ -38,6 +40,39 @@ sequenceDiagram
 		GRS ->>- NPC Alice: say "No kidding..."
 	end
 ```
+
+GRS accepts incoming queries and emits signals based on that!
+
+-----
+
+Here's what happens when a query is evaluated by GRS:
+
+```mermaid
+flowchart LR
+	subgraph GRS
+		Evaluates{{evaluates}}
+		subgraph Rules
+			Rule1(em_is_idle<br><b>rule</b>)
+			Rule2(em_is_working<br><b>rule</b>)
+		end
+
+		subgraph Responses
+			Response1(say: What's up?<br><b>response</b>)
+			Response2(say: I'm busy<br><b>response</b>)
+		end
+	end
+
+	Query(idle<br><b>query</b>) --> Evaluates
+	Evaluates --> Rule1
+	Evaluates --> Rule2
+
+	Rule1 -->|not matched| Rule1
+	Rule2 -->|matched,<br>calls| Response2
+
+	Response2 -->|emits| Signal((do a 'say'<br><b>signal</b>))
+```
+
+Basically, when a query is dispatched to `GRS` it's evaluated against each rule. The matching rule calls the response. The response emits a signal from the `GrsEntity` that's evaluating the query. The node with that `GrsEntity` can then accept that signal and, for example, display the string in a textbox or play a voice line.
 
 -----
 
@@ -84,34 +119,6 @@ sequenceDiagram
 
 ## Using the response system
 
-Here's an overview of a query being evaluated by GRS, from start to finish:
-
-```mermaid
-flowchart LR
-	subgraph GRS
-		Evaluates{{evaluates}}
-		subgraph Rules
-			Rule1(em_is_idle<br><b>rule</b>)
-			Rule2(em_is_working<br><b>rule</b>)
-		end
-
-		subgraph Responses
-			Response1(say: What's up?<br><b>response</b>)
-			Response2(say: I'm busy<br><b>response</b>)
-		end
-	end
-
-	Query(idle<br><b>query</b>) --> Evaluates
-	Evaluates --> Rule1
-	Evaluates --> Rule2
-
-	Rule1 -->|not matched| Rule1
-	Rule2 -->|matched,<br>calls| Response2
-
-	Response2 -->|emits| Signal((do a 'say'<br><b>signal</b>))
-```
-
-Basically, when a query is dispatched to `GRS` it's evaluated against each rule. The matching rule calls the response. The response emits a signal from the `GrsEntity` that's evaluating the query. The node with that `GrsEntity` can then accept that signal and, for example, display the string in a textbox or play a voice line.
 
 
 
