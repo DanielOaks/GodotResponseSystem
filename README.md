@@ -43,11 +43,11 @@ sequenceDiagram
 
 ## Parts of the response system
 
-### Concepts
+### Basics
 
 - **Fact dictionaries.**
-	- A GRS fact dictionary contains context around either the game itself, the entity it's attached to, or the query it's attached to.
-	- The way GRS gets game context is by looking at the values in fact dictionaries.
+	- A GRS fact dictionary contains context around either the game itself or the query/entity it's attached to.
+	- GRS sees game context by looking at the values in fact dictionaries.
 - **Concept.**
 	- Describes why the response system is being polled.
 	- Each query contains a context, e.g. 'idle' (entity is idle), 'question' (entity is asking a question), 'answer' (entity is giving an answer), 'got hit' (entity just got hit by something).
@@ -55,8 +55,8 @@ sequenceDiagram
 	- Named true/false check, and are used when creating rules. Criteria can be calculated once and then used by multiple rules.
 	- Example: The criterion `PlayerNearby` is true if `playerDistance < 300`.
 - **Rules.**
-	- These are the main things that `GRS` evaluates.
-	- A rule includes one or more criteria to match, and the response(s) to trigger as a result.
+	- These are the main things `GRS` evaluates.
+	- Contains one or more criteria to match, and the response(s) to trigger as a result.
 - **Responses.**
 	- Responses take a rule and... define how an entity should respond to that rule! These include the lines of text to say, actions to take, and more.
 
@@ -70,6 +70,7 @@ sequenceDiagram
 	- When removed from the node tree, it removes itself from `GRS`.
 - `GrsQuery` (submitted for each event/etc to be evaluated).
 	- One of these is created for each event to be evaluated by `GRS`.
+	- Queries are **dispatched** to `GRS`.
 	- Contains:
 		- `concept`: tells `GRS` what kind of event it's receiving (idle, question, answer, just hit, etc).
 		- `entity`: which entity originated this query.
@@ -83,7 +84,34 @@ sequenceDiagram
 
 ## Using the response system
 
-...
+Here's an overview of a query being evaluated by GRS, from start to finish:
+
+```mermaid
+flowchart LR
+	subgraph GRS
+		Evaluates{{evaluates}}
+		subgraph Rules
+			Rule1(em_is_idle<br><b>rule</b>)
+			Rule2(em_is_working<br><b>rule</b>)
+		end
+
+		subgraph Responses
+			Response1(say: What's up?<br><b>response</b>)
+			Response2(say: I'm busy<br><b>response</b>)
+		end
+	end
+
+	Query(idle<br><b>query</b>) --> Evaluates
+	Evaluates --> Rule1
+	Evaluates --> Rule2
+
+	Rule1 -->|not matched| Rule1
+	Rule2 -->|matched,<br>calls| Response2
+
+	Response2 -->|emits| Signal((do a 'say'<br><b>signal</b>))
+```
+
+Basically, when a query is dispatched to `GRS` it's evaluated against each rule. The matching rule calls the response. The response emits a signal from the `GrsEntity` that's evaluating the query. The node with that `GrsEntity` can then accept that signal and, for example, display the string in a textbox or play a voice line.
 
 
 
