@@ -142,10 +142,13 @@ Columns:
 A criterion is a named true/false check. For example, the criterion `PlayerNearby` may be true if `playerDistance<300`
 
 Columns:
-- `name`: the name of this criterion. e.g. PlayerIsHurt, PlayerReallyHurt, TurretNearby.
+- `name`: the name of this criterion. e.g. `PlayerIsHurt`, `PlayerReallyHurt`, `TurretNearby`.
 - `matchkey`: the name of the fact to compare against, e.g. `playerDistance`, `cash`, `name`.
-- `matchvalue`: check to perform against the given fact, e.g. `<300` (less than 300), `>30,<50` (between 30 and 50), `"charlie"` (compare to this string).
-- `weight`: weight of this criterion when applying it in rules. defaults to `1.0`.
+- `matchvalue`: check to perform against the given fact:
+	- Equals value: `250`, `"charlie"` (the quotation marks are required for strings)
+	- Not equal to: `!=250`, `!="bob"` (the quotation marks are required for strings)
+	- Range: `<300` (less than 300), `<=20` (less than or equal to 20), `>30,<50` (between 30 and 50)
+- `weight`: weight of this criterion when comparing different rules. defaults to `1.0`.
 - `optional`: means that this criteria is optional (the rule can still succeed if this criterion fails, this just adds weight if true).
 
 Criterion recommendations:
