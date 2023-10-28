@@ -176,8 +176,8 @@ These describe how actors respond once a rule is matched.
 **Response groups** include more than one response. How this works is that there are more than one response which GRS treats as variants, randomly picking between them. When you are using a response group, fill **only the `name` and `flags` column** in the first line, with any group-specific flags. Then for the responses in that group, use the following lines **with an empty name column**.
 
 Columns:
-- `name: the name of this response group.
-- `flags: flags that apply to this response or response group, separated by spaces:
+- `name`: the name of this response group.
+- `flags`: flags that apply to this response or response group, separated by spaces:
 	- group and/or response flags:
 		- `norepeat`: once we've sent this response, disable it so it can't trigger again.
 	- group flags:
@@ -187,13 +187,13 @@ Columns:
 	- individual response flags:
 		- `first`: fire this response first in the group.
 		- `last`: fire this response last in the group.
-- `responsetype: one of: 'say' (say the response), 'log' (log to console).
-- `response: if 'say' or 'log', then text.
-- `delay: mark the character as 'busy' for this long. defaults to some length of time we guess...
-- `odds: if under 100, that much of a % chance this response actually fires (if it doesn't fire, no response is sent). defaults to 100.
-- `resaydelay: don't use this response again for this many seconds. default 0.
-- `weight: if there are multiple responses, weight this one accordingly. default 1.
-- `then: fire this new criteria on the given actor. 'any' to test every nearby actor. any matching responses are then chosen between, so that only one response is ever run based on an 'any' query, as the actor is the one querying its neighbours – see [this part of the talk](https://youtu.be/tAbBID3N64A?t=3341).
+- `responsetype`: one of: 'say' (say the response), 'log' (log to console).
+- `response`: if 'say' or 'log', then text.
+- `delay`: mark the character as 'busy' for this long. defaults to some length of time we guess...
+- `odds`: if under 100, that much of a % chance this response actually fires (if it doesn't fire, no response is sent). defaults to 100.
+- `resaydelay`: don't use this response again for this many seconds. default 0.
+- `weight`: if there are multiple responses, weight this one accordingly. default 1.
+- `then`: fire this new criteria on the given actor. `any` to test every nearby actor. any matching responses are then chosen between, so that only one response is ever run based on an 'any' query, as the actor is the one querying its neighbours – see [this part of the talk](https://youtu.be/tAbBID3N64A?t=3341).
 
 Response recommendations
 - Using the same name for a rule and its triggered response / group is a good idea, if only one or a main unique one is triggered by a rule.
