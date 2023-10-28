@@ -193,7 +193,7 @@ Columns:
 - `odds: if under 100, that much of a % chance this response actually fires (if it doesn't fire, no response is sent). defaults to 100.
 - `resaydelay: don't use this response again for this many seconds. default 0.
 - `weight: if there are multiple responses, weight this one accordingly. default 1.
-- `then: fire this new criteria on the given actor. 'any' to test every nearby actor. any matching responses are then chosen between, so that only one response is ever run based on an 'any' query, as the actor is the one querying its neighbours – see this part of the talk.
+- `then: fire this new criteria on the given actor. 'any' to test every nearby actor. any matching responses are then chosen between, so that only one response is ever run based on an 'any' query, as the actor is the one querying its neighbours – see [this part of the talk](https://youtu.be/tAbBID3N64A?t=3341).
 
 Response recommendations
 - Using the same name for a rule and its triggered response / group is a good idea, if only one or a main unique one is triggered by a rule.
