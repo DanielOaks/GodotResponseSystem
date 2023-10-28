@@ -40,8 +40,9 @@ sequenceDiagram
 
 	rect rgb(190,180,100,0.08)
 		Note left of GRS: Game event<br>with answer
-		NPC Trixie -->>+ GRS: An explosion happened nearby
+		NPC Trixie -->>+ GRS: An explosion happened near me
 		GRS ->>- NPC Trixie: say "That was close!"
+		NPC Trixie ->> NPC Alice: I said "That was close!"
 		NPC Alice -->>+ GRS: I heard 'That was close!'
 		GRS ->>- NPC Alice: say "No kidding..."
 	end
