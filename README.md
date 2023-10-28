@@ -181,8 +181,6 @@ These describe how actors respond once a rule is matched.
 Columns:
 - `name`: the name of this response group.
 - `flags`: flags that apply to this response or response group, separated by spaces:
-	- group and/or response flags:
-		- `norepeat`: once we've sent this response, disable it so it can't trigger again.
 	- group flags:
 		- `permitrepeats`: by default, all responses in the group are visited before repeating any.
 		- `sequential`: by default, responses are chosen randomly. with this, start at first and end at last in the list.
@@ -190,6 +188,7 @@ Columns:
 	- individual response flags:
 		- `first`: fire this response first in the group.
 		- `last`: fire this response last in the group.
+		- `norepeat`: once we've sent this response, disable it so it can't trigger again.
 - `responsetype`: one of: 'say' (say the response), 'log' (log to console).
 - `response`: if 'say' or 'log', then text.
 - `delay`: mark the character as 'busy' for this long. defaults to some length of time we guess...
