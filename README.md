@@ -30,9 +30,10 @@ flowchart LR
     subgraph Query
         direction LR
         subgraph Facts
-            WhoFact('em'<br>who)
-            ConceptFact('idle'<br>concept)
-            RadioDistanceFact(4.6<br>radioDistance)
+        direction LR
+            WhoFact(who: 'em')
+            ConceptFact(concept: 'idle')
+            RadioDistanceFact(radioDistance: 4.6)
         end
     end
 	Query -->|tests| FoundRadioRule
