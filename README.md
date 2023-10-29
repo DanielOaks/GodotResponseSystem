@@ -83,28 +83,7 @@ Basically, when a query is dispatched to `GRS` it evaluats the rule database. If
 
 -----
 
-## Parts of the response system
-
-### Basics
-
-- **Fact dictionaries.**
-	- A GRS fact dictionary contains context about the world, actor, and more, which inform response choices.
-	- GRS sees game context by looking at the values in fact dictionaries.
-- **Concept.**
-	- Describes why the response system is being queried.
-	- Each query contains a context, e.g. 'idle' (actor is idle), 'question' (actor is asking a question), 'answer' (actor is giving an answer), 'got hit' (actor just got hit by something).
-- **Criteria.**
-	- Named true/false check, and are used when creating rules. Criteria can be calculated once and then used by multiple rules.
-	- Example: The criterion `PlayerNearby` is true if `playerDistance < 300`.
-- **Rules.**
-	- These are the main things `GRS` evaluates.
-	- Contains one or more criteria to match.
-	- Contains the response / response group to trigger as a result.
-- **Responses.**
-	- Responses... define how an actor should respond to a rule! These include the lines of text to say, actions to take, and more.
-	- All responses in a **response group** are treated as variants, and are picked at random.
-
-### Nodes
+## Response system nodes
 
 - `GRS` (the main response system):
 	- A `GRS` singleton is added to your game.
@@ -112,6 +91,9 @@ Basically, when a query is dispatched to `GRS` it evaluats the rule database. If
 - `GrsActor` (one for each NPC / etc):
 	- When added to the node tree, it adds itself to `GRS`. This lets that actor get responses from `GRS`, which the actor then emits as signals.
 	- When removed from the node tree, it removes itself from `GRS`.
+- `GrsFactDictionary`:
+	- Contains context about the world, actor, and more, which inform response choices.
+	- GRS sees game context by looking at the values in fact dictionaries.
 - `GrsQuery` (submitted for each event/etc to be evaluated).
 	- One of these is created for each event to be evaluated by `GRS`.
 	- Queries are **dispatched** to `GRS`.
@@ -134,6 +116,9 @@ Here's a description of the different types of files the response system loads. 
 ### Concepts
 These describe why the response system is being queried. These are events the programmers need to send to the response system for it to work.
 
+- Describes why the response system is being queried.
+- Each query contains a context, e.g. 'idle' (actor is idle), 'got hit' (actor just got hit by something).
+
 Columns:
 - `name`: simple, the name of this concept.
 - `priority`: concepts default to a priority of `0`. Concepts with a higher priority (`1`, `2`, `3`, etc) will interrupt concepts with a lower priority (for example, to let a death noise interrupt normal dialogue). If `nopriority` is given as a concept's priority, that concept will never interrupt any other speech and the system will act as though no event is happening when other responses check for activity.
@@ -141,10 +126,13 @@ Columns:
 ### Criteria
 A criterion is a named true/false check. For example, the criterion `PlayerNearby` may be true if `playerDistance<300`
 
+- Named true/false check, and are used when creating rules. Criteria can be calculated once and then used by multiple rules.
+- Example: The criterion `PlayerNearby` is true if `playerDistance < 300`.
+
 Columns:
 - `name`: the name of this criterion. e.g. `PlayerIsHurt`, `PlayerReallyHurt`, `TurretNearby`.
-- `matchkey`: the name of the fact to compare against, e.g. `playerDistance`, `cash`, `name`.
-- `matchvalue`: check to perform against the given fact:
+- `fact`: the name of the fact to compare against, e.g. `playerDistance`, `cash`, `name`.
+- `match`: check to perform against the given fact:
 	- Equals value: `250`, `"charlie"` (the quotation marks are required for strings)
 	- Not equal to: `!=250`, `!="bob"` (the quotation marks are required for strings)
 	- Range: `<300` (less than 300), `<=20` (less than or equal to 20), `>30,<50` (between 30 and 50)
@@ -152,12 +140,16 @@ Columns:
 - `optional`: means that this criteria is optional (the rule can still succeed if this criterion fails, this just adds weight if true).
 
 Criterion recommendations:
-- concept: Current concept. Tend to refer to these with `Concept*`, e.g. `ConceptIdleTalk`, `ConceptHit`.
-- who: Who is the current entity evaluating this check. Tend to refer to these with `Is*`, e.g. `IsDaniel`, `IsEm`.
-- map: The level/map we're on. Tend to refer to these with `Map*`.
+- Name: `Concept*`, Fact: `concept`, Checks the current concept. e.g. `ConceptIdleTalk`, `ConceptHit`.
+- Name: `Is*`, Fact: `who`, Who is the current actor evaluating this check. e.g. `IsDaniel`, `IsEm`.
+- Name: `Map*`, Fact: `map` or `level`, The level/map we're on.
 
 ### Rules
 These include one or more criteria to match, and one or more response groups to trigger.
+
+- These are the main things `GRS` evaluates.
+- Contains one or more criteria to match.
+- Contains the response / response group to trigger as a result.
 
 Columns:
 - `name`: the name of this rule.
@@ -175,6 +167,9 @@ Rule recommendedations:
 
 ### Responses
 These describe how actors respond once a rule is matched.
+
+- Responses... define how an actor should respond to a rule! These include the lines of text to say, actions to take, and more.
+- All responses in a **response group** are treated as variants, and are picked at random.
 
 **Response groups** include more than one response. How this works is that there are more than one response which GRS treats as variants, randomly picking between them. When you are using a response group, fill **only the `name` and `flags` column** in the first line, with any group-specific flags. Then for the responses in that group, use the following lines **with an empty name column**.
 
