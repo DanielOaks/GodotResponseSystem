@@ -39,8 +39,8 @@ flowchart LR
 	subgraph GRS
         direction LR
 		subgraph FoundRadioRule
-			Criterion1(is character 'Em'<br>criterion) ---|checks| Fact1('who' == 'em'<br>fact)
-			Criterion2(is near 'radio'<br>criterion) ---|checks| Fact2('radioDistance' < 10<br>fact)
+			Criterion1(is character 'Em'<br>criterion) ---|checks| Fact1(who == 'em')
+			Criterion2(is near 'radio'<br>criterion) ---|checks| Fact2(radioDistance < 10)
 		end
 		subgraph FoundRadioResponses
 			direction LR
@@ -48,7 +48,7 @@ flowchart LR
 			Response2(say 'Look, a radio!')
 		end
 
-		FoundRadioRule -->|sends to actor| FoundRadioResponses
+		FoundRadioRule ---|has responses| FoundRadioResponses
 	end
 ```
 
