@@ -30,9 +30,9 @@ flowchart LR
     subgraph Query
         direction LR
         subgraph Facts
-        direction LR
-            WhoFact(who: 'em')
+        	direction LR
             ConceptFact(concept: 'idle')
+            WhoFact(who: 'em')
             RadioDistanceFact(radioDistance: 4.6)
         end
     end
@@ -40,6 +40,7 @@ flowchart LR
 	subgraph GRS
         direction LR
 		subgraph FoundRadioRule
+        	direction LR
 			Criterion1(is character 'Em'<br>criterion) ---|checks| Fact1(who == 'em')
 			Criterion2(is near 'radio'<br>criterion) ---|checks| Fact2(radioDistance < 10)
 		end
