@@ -19,6 +19,56 @@ To do so:
 - GRS searches the rule database you've loaded, and if there's a matching rule GRS sends the response to the actor.
 - The actor emits a signal containing the response info. e.g. the name of the animation to play or the text to display.
 
+## Response system nodes
+
+- `GRS`:
+	- A `GRS` singleton is added to your game by the plugin.
+- `GrsActor`:
+	- You add one of these to each entity (NPC, etc) that `GRS` sends responses to.
+	- When created, it automatically adds itself to `GRS`. This lets that actor get responses from `GRS`, which the actor then emits as signals.
+	- When removed from the node tree, it removes itself from `GRS`.
+- `GrsFactDictionary`:
+	- Contains context about the world, actor, and more, which inform response choices.
+	- GRS sees game context by looking at the values in fact dictionaries.
+- `GrsQuery` (submitted for each event/etc to be evaluated).
+	- One of these is created for each event to be evaluated by `GRS`.
+	- Queries are **dispatched** to `GRS`.
+	- Contains:
+		- `concept`: tells `GRS` what kind of event it's receiving (idle, question, answer, just hit, etc).
+		- `actor`: which actor originated this query.
+		- fact dictionary: contains context related to the query itself.
+	- By default, facts are searched for in this order:
+		- `GrsQuery`'s fact dictionary (most specific, contains concept, etc).
+		- `GrsActor`'s fact dictionary (contains any information set on the actor).
+		- `GRS` root fact dictionary (contains any game-wide info).
+	- But you can also supply extra fact dictionaries. For example, maybe you want to supply a 'map' fact dictionary, a fact dictionary about the actor's faction or guild, or something different.
+
+-----
+
+Here's a high-level example of how `GRS` and `GrsActor`s interact. Dashed lines are queries sent to GRS and solid lines are signals emitted from the given `GrsActor`:
+
+```mermaid
+sequenceDiagram
+	participant GRS
+	participant NPC Alice
+	participant NPC Trixie
+
+	rect rgb(190,100,180,0.08)
+		Note left of GRS: NPC Talk Idle
+		NPC Alice -->>+ GRS: Can I say a line?
+		GRS ->>- NPC Alice: say "Let's get a move on"
+	end
+
+	rect rgb(190,180,100,0.08)
+		Note left of GRS: Game event<br>with answer
+		NPC Trixie -->>+ GRS: An explosion happened near me
+		GRS ->>- NPC Trixie: say "That was close!"
+		NPC Trixie ->> NPC Alice: I said "That was close!"
+		NPC Alice -->>+ GRS: I heard 'That was close!'
+		GRS ->>- NPC Alice: say "No kidding..."
+	end
+```
+
 ## Response system data
 
 Here's a description of the different types of files the response system loads. Our default importer takes CSV files, which can be exported from a copy of the [GRS spreadsheet](https://docs.google.com/spreadsheets/d/1JIgC-Pu2sS9v4Bf35eo1QU7qvDjbHmdbWrxSLtxYTEU/edit?usp=sharing).
@@ -60,7 +110,7 @@ flowchart LR
 These describe why the response system is being queried. These are events the programmers need to send to the response system for it to work, e.g. 'idle' (actor is idle), 'got hit' (actor just got hit by something).
 
 Columns:
-- `name`: simple, the name of this concept.
+- `name`: the name of this concept.
 - `priority`: concepts default to a priority of `0`. Concepts with a higher priority (`1`, `2`, `3`, etc) will interrupt concepts with a lower priority (for example, to let a death noise interrupt normal dialogue). If `nopriority` is given as a concept's priority, that concept will never interrupt any other speech and the system will act as though no event is happening when other responses check for activity.
 
 ### Criteria
@@ -77,7 +127,7 @@ Columns:
 - `optional`: means that this criteria is optional (the rule can still succeed if this criterion fails, this just adds weight if true).
 
 Criterion recommendations:
-- Name: `Concept*`, Fact: `concept`, Checks the current concept. e.g. `ConceptIdleTalk`, `ConceptHit`.
+- Name: `Concept*`, Fact: `concept`, Checks the current concept. e.g. `ConceptIdleBark`, `ConceptHit`.
 - Name: `Is*`, Fact: `who`, Who is the current actor evaluating this check. e.g. `IsDaniel`, `IsEm`.
 - Name: `Map*`, Fact: `map` or `level`, The level/map we're on.
 
@@ -125,61 +175,7 @@ Columns:
 Response recommendations
 - Using the same name for a rule and its triggered response / group is a good idea, if only one or a main unique one is triggered by a rule.
 
-## Response system nodes
-
-- `GRS` (the main response system):
-	- A `GRS` singleton is added to your game by the plugin.
-	- The main `GRS` fact dictionary contains context like the current map/level, the player health, etc.
-- `GrsActor` (one for each NPC / etc):
-	- When added to the node tree, it adds itself to `GRS`. This lets that actor get responses from `GRS`, which the actor then emits as signals.
-	- When removed from the node tree, it removes itself from `GRS`.
-- `GrsFactDictionary`:
-	- Contains context about the world, actor, and more, which inform response choices.
-	- GRS sees game context by looking at the values in fact dictionaries.
-- `GrsQuery` (submitted for each event/etc to be evaluated).
-	- One of these is created for each event to be evaluated by `GRS`.
-	- Queries are **dispatched** to `GRS`.
-	- Contains:
-		- `concept`: tells `GRS` what kind of event it's receiving (idle, question, answer, just hit, etc).
-		- `actor`: which actor originated this query.
-		- fact dictionary: contains context related to the query itself.
-	- By default, these fact dictionaries are evaluated in order:
-		- `GrsQuery`'s fact dictionary (most specific, contains concept, etc).
-		- `GrsActor`'s fact dictionary (contains any information set on the actor).
-		- `GRS` root fact dictionary (contains any game-wide info that may affect responses).
-	- But you can also supply extra fact dictionaries. For example, maybe you want to supply a 'map' fact dictionary, a fact dictionary about the actor's faction or guild, or something different.
-
------
-
-## Examples
-
-Here are some high-level examples of how the Game, GRS, and NPCs may interact. Dashed lines are queries sent to GRS and solid lines are signals emitted from the given `GrsActor`:
-
-```mermaid
-sequenceDiagram
-	participant GRS
-	participant NPC Alice
-	participant NPC Trixie
-
-	rect rgb(190,100,180,0.08)
-		Note left of GRS: NPC Talk Idle
-		NPC Alice -->>+ GRS: Can I say a line?
-		GRS ->>- NPC Alice: say "Let's get a move on"
-	end
-
-	rect rgb(190,180,100,0.08)
-		Note left of GRS: Game event<br>with answer
-		NPC Trixie -->>+ GRS: An explosion happened near me
-		GRS ->>- NPC Trixie: say "That was close!"
-		NPC Trixie ->> NPC Alice: I said "That was close!"
-		NPC Alice -->>+ GRS: I heard 'That was close!'
-		GRS ->>- NPC Alice: say "No kidding..."
-	end
-```
-
-GRS accepts incoming queries and emits signals based on that!
-
------
+## Using the response system
 
 Here's what happens when a query is evaluated by GRS:
 
