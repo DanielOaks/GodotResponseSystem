@@ -50,7 +50,7 @@ flowchart LR
 			Response2(say 'Look, a radio!')
 		end
 
-		FoundRadioRule ---|has responses| FoundRadioResponses
+		FoundRadioRule ---|sends| FoundRadioResponses
 	end
 ```
 
