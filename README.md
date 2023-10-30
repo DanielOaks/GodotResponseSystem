@@ -2,6 +2,8 @@
 
 GRS lets NPCs and other entities in your game respond (speak, animate, do actions, etc) based on what happens in the game and what others do/say. Writers can easily add, remove, or edit responses in your game's GRS spreadsheet, which is exported and then loaded by the system, which tells the entities in your game what to do in response to inputs.
 
+Look at https://github.com/timothyqiu/godot-csv-data-importer – the CSV importing code that we use is from there!
+
 ## Overview
 
 GRS is designed after Valve's response system used in the Source engine, and described in their GDC talk ["Rule Databases for Contextual Dialog and Game Logic"](https://youtu.be/tAbBID3N64A). It also borrows heavily from the [Response System docs](https://developer.valvesoftware.com/wiki/Response_System) on the Valve Developer Wiki. I recommend watching that talk and reading that page, as it'll give you a good idea of why and how this system works.
@@ -123,7 +125,7 @@ Columns:
 	- Equals value: `250`, `"charlie"` (the quotation marks are required for strings)
 	- Not equal to: `!=250`, `!="bob"` (the quotation marks are required for strings)
 	- Range: `<300` (less than 300), `<=20` (less than or equal to 20), `>30,<50` (between 30 and 50)
-- `weight`: weight of this criterion when comparing different rules. defaults to `1.0`.
+- `weight`: weight of this criterion when comparing different rules. default `1.0`.
 - `optional`: means that this criteria is optional (the rule can still succeed if this criterion fails, this just adds weight if true).
 
 Criterion recommendations:
@@ -166,10 +168,11 @@ Columns:
 		- `norepeat`: once we've sent this response, disable it so it can't trigger again.
 - `responsetype`: one of: 'say' (say the response), 'log' (log to console).
 - `response`: if 'say' or 'log', then text.
-- `delay`: mark the character as 'busy' for this long. defaults to some length of time we guess...
-- `odds`: if under 100, that much of a % chance this response actually fires (if it doesn't fire, no response is sent). defaults to 100.
-- `resaydelay`: don't use this response again for this many seconds. default 0.
-- `weight`: if there are multiple responses, weight this one accordingly. default 1.
+- `busyfor`: mark the character as 'busy' for this many seconds. default `3`.
+- `busyjitter`: add up to this many seconds, randomly, to `busyfor`. default `0.5`.
+- `odds`: if under 100, that much of a % chance this response actually fires (if it doesn't fire, no response is sent). default `100`.
+- `resaydelay`: don't use this response again for this many seconds. default `0`.
+- `weight`: if there are multiple responses, weight this one accordingly. default `1`.
 - `then`: fire this new criteria on the given actor. `any` to test every nearby actor. any matching responses are then chosen between, so that only one response is ever run based on an 'any' query, as the actor is the one querying its neighbours – see [this part of the talk](https://youtu.be/tAbBID3N64A?t=3341).
 
 Response recommendations

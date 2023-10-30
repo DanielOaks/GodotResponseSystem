@@ -1,0 +1,3 @@
+name,priority,description
+idlebark,,actor is idling
+stare,,player is staring at us (just pressed 'look' button or is just hanging out very close and looking our way)
