@@ -1,0 +1,15 @@
+[remap]
+
+importer="pix.grs.concepts.csv"
+type="Resource"
+uid="uid://bdjlhdrvswjap"
+path="res://.godot/imported/concepts.csv-eb7af00676387cedbebc35c128d29b71.res"
+
+[deps]
+
+source_file="res://examples/basic/grs/concepts.csv"
+dest_files=["res://.godot/imported/concepts.csv-eb7af00676387cedbebc35c128d29b71.res"]
+
+[params]
+
+delimiter=0

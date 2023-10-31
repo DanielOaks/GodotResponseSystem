@@ -14,6 +14,10 @@ config/name="GodotResponseSystemExample"
 config/features=PackedStringArray("4.2", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GodotResponseSystem="*res://addons/godot_response_system/grs.gd"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/godot_response_system/plugin.cfg")

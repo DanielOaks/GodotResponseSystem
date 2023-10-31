@@ -1,0 +1,90 @@
+[gd_scene load_steps=8 format=3 uid="uid://btxvjylr5w217"]
+
+[ext_resource type="Script" path="res://examples/basic/Character2D.gd" id="1_c5d2o"]
+[ext_resource type="Texture2D" uid="uid://bhgdfmr16l018" path="res://examples/basic/sprites/cloud.png" id="2_n0gi8"]
+[ext_resource type="Script" path="res://addons/godot_response_system/grs_actor.gd" id="3_weenp"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4a06j"]
+size = Vector2(730, 17)
+
+[sub_resource type="Gradient" id="Gradient_ejasc"]
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_ue5u8"]
+gradient = SubResource("Gradient_ejasc")
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_8sjts"]
+radius = 8.0
+
+[node name="Level" type="Node2D"]
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(358, 11)
+shape = SubResource("RectangleShape2D_4a06j")
+
+[node name="Sprite2D" type="Sprite2D" parent="StaticBody2D"]
+position = Vector2(358, 11)
+scale = Vector2(11.375, 0.25)
+texture = SubResource("GradientTexture2D_ue5u8")
+
+[node name="Character2D" type="CharacterBody2D" parent="."]
+position = Vector2(42, -62)
+scale = Vector2(2.76, 2.44)
+script = ExtResource("1_c5d2o")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Character2D"]
+shape = SubResource("CapsuleShape2D_8sjts")
+
+[node name="RemoteTransform2D" type="RemoteTransform2D" parent="Character2D"]
+remote_path = NodePath("../../Camera2D")
+
+[node name="Cloud" type="Sprite2D" parent="Character2D"]
+position = Vector2(0.157493, 0.31498)
+rotation = 1.5708
+scale = Vector2(0.153547, 0.151487)
+texture = ExtResource("2_n0gi8")
+
+[node name="Label" type="Label" parent="Character2D"]
+offset_left = -4.0
+offset_top = 3.0
+offset_right = 49.0
+offset_bottom = 45.0
+scale = Vector2(0.2, 0.2)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.819608)
+theme_override_constants/outline_size = 20
+theme_override_font_sizes/font_size = 30
+text = "you"
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(42, -62)
+scale = Vector2(2.76, 2.44)
+position_smoothing_enabled = true
+position_smoothing_speed = 13.0
+drag_horizontal_enabled = true
+drag_vertical_enabled = true
+
+[node name="Em" type="Node2D" parent="."]
+position = Vector2(424, -34)
+
+[node name="Cloud2" type="Sprite2D" parent="Em"]
+modulate = Color(0.788235, 0.498039, 0.658824, 1)
+rotation = 1.5708
+scale = Vector2(0.374654, 0.418105)
+texture = ExtResource("2_n0gi8")
+
+[node name="Label2" type="Label" parent="Em"]
+offset_left = -14.0
+offset_top = 2.0
+offset_right = 56.0
+offset_bottom = 57.0
+scale = Vector2(0.5, 0.5)
+theme_override_colors/font_color = Color(0.0823529, 0, 1, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 0.858824)
+theme_override_constants/outline_size = 20
+theme_override_font_sizes/font_size = 40
+text = "em"
+
+[node name="GrsActor" type="Node" parent="Em"]
+script = ExtResource("3_weenp")

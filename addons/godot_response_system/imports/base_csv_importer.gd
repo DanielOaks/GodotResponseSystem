@@ -1,3 +1,4 @@
+extends EditorImportPlugin
 class_name BaseCsvImporter
 
 enum Presets { CSV, TSV }
