@@ -30,10 +30,9 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 		printerr("Missing column 'name'. Try checking the delimiter and other import settings.")
 		return FAILED
 
-	var data = preload("../grs_concept_list.gd").new()
+	var data = preload("../grs_concept_dict.gd").new()
 
 	for line: Dictionary in csv.records:
-		
 		var c = GrsConcept.new()
 		
 		c.cname = line.get("name", "NameNotFound").strip_edges()
@@ -52,7 +51,7 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 			printerr("Concept [", c.cname, "] was found multiple times in the same CSV file")
 			return FAILED
 
-		data.concepts[c.cname] = c
+		data.concepts[c.cname.to_lower()] = c
 
 	var filename = save_path + "." + _get_save_extension()
 	var err = ResourceSaver.save(data, filename)
