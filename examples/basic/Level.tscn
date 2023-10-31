@@ -88,3 +88,4 @@ text = "em"
 
 [node name="GrsActor" type="Node" parent="Em"]
 script = ExtResource("3_weenp")
+actorName = "em"
