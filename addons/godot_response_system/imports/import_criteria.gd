@@ -33,7 +33,6 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 	var data = preload("../grs_criterion_dict.gd").new()
 
 	for line: Dictionary in csv.records:
-		
 		var c = GrsCritereon.new()
 		
 		c.cname = line.get("name", "NameNotFound").strip_edges()
@@ -52,7 +51,7 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 			return FAILED
 		c.weight = float(weightString)
 
-		if data.criteria.has(c.cname):
+		if data.criteria.has(c.cname.to_lower()):
 			printerr("Concept [", c.cname, "] was found multiple times in the same CSV file")
 			return FAILED
 

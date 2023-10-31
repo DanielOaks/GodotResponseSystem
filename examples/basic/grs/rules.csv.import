@@ -1,0 +1,15 @@
+[remap]
+
+importer="pix.grs.rules.csv"
+type="Resource"
+uid="uid://dco51jr74exvo"
+path="res://.godot/imported/rules.csv-8ebd93230c68e28d47776a450469e7f4.res"
+
+[deps]
+
+source_file="res://examples/basic/grs/rules.csv"
+dest_files=["res://.godot/imported/rules.csv-8ebd93230c68e28d47776a450469e7f4.res"]
+
+[params]
+
+delimiter=0

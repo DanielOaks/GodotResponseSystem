@@ -47,7 +47,7 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 			return FAILED
 		c.priority = int(priorityString)
 
-		if data.concepts.has(c.cname):
+		if data.concepts.has(c.cname.to_lower()):
 			printerr("Concept [", c.cname, "] was found multiple times in the same CSV file")
 			return FAILED
 

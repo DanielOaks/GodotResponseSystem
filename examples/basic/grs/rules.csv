@@ -1,0 +1,5 @@
+name,criteria,responses
+EmShopIdle,IsEm ConceptIdle,EmShopIdle
+EmShopIdleRepair,IsEm ConceptIdle AmRepairing,EmShopIdleRepair
+EmShopStare,IsEm ConceptStare,EmShopStare
+EmShopStareRepair,IsEm ConceptStare AmRepairing,EmShopStareRepair
