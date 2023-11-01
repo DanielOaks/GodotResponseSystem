@@ -30,7 +30,7 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 		printerr("Missing required column. Try checking the delimiter and other import settings.")
 		return FAILED
 
-	var data = preload("../grs_responses_dict.gd").new()
+	var data = GrsData.new()
 
 	var responseGroup = GrsResponseGroup.new()
 

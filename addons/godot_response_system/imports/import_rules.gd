@@ -30,7 +30,7 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 		printerr("Missing required column. Try checking the delimiter and other import settings.")
 		return FAILED
 
-	var data = preload("../grs_rule_dict.gd").new()
+	var data = GrsData.new()
 
 	for line: Dictionary in csv.records:
 		var c = GrsRule.new()
