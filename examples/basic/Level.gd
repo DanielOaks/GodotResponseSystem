@@ -10,6 +10,10 @@ func _ready():
 	grs.load(preload("res://examples/basic/grs/responses.csv"))
 
 func _on_grs_actor_response(type: String, content: String):
-	print("em  ", type, " : ", content)
 	if type == "say":
 		$Em/say.text = content
+	else:
+		print_debug("em got unknown response type : ", type, " : ", content)
+
+func _on_grs_actor_no_longer_busy():
+	$Em/say.text = ""

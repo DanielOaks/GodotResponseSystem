@@ -4,6 +4,9 @@ class_name GrsActor
 ## Emitted when a new response is ready from GRS.
 signal response(type: String, content: String)
 
+## Emitted when we are no longer marked busy.
+signal no_longer_busy()
+
 ## Unique key to refer to this actor
 var key: String :
 	get:
@@ -34,12 +37,21 @@ var key: String :
 var grs: GRS
 var _idle_timer: Timer
 
+var busy_priority_level = -999
+var _busy_reset_timer: Timer
+
 func _enter_tree():
 	# create idle timer
 	_idle_timer = Timer.new()
 	add_child(_idle_timer)
 	_idle_timer.one_shot = true
 	_idle_timer.timeout.connect(emit_idle)
+	
+	# create busy timer
+	_busy_reset_timer = Timer.new()
+	add_child(_busy_reset_timer)
+	_busy_reset_timer.one_shot = true
+	_busy_reset_timer.timeout.connect(emit_not_busy)
 
 	# start barking
 	if dispatchBarks:
@@ -72,13 +84,35 @@ func emit_idle():
 	# start the next run
 	_idle_timer.start(idle_wait_time())
 
+func emit_not_busy():
+	emit_signal("no_longer_busy")
+	busy_priority_level = -999
+
 ## Sends an event to GRS.
 func dispatch(concept: String):
+	# check concept priority
+	var concept_key = concept.strip_edges().to_lower()
+	var c: GrsConcept = grs.concepts.get(concept_key)
+	if c == null:
+		print_debug("Concept ", concept, " is not defined, ignoring dispatch request")
+
+	if _busy_reset_timer.is_stopped() or busy_priority_level == -999 or c.priority > busy_priority_level:
+		# keep going
+		pass
+	else:
+		# new concept cannot interrupt current concept
+		return
+	
+	# dispatch to grs
 	var q := GrsQuery.new()
 	q.facts.set_fact("who", key)
-	q.facts.set_fact("concept", concept.strip_edges().to_lower())
+	q.facts.set_fact("concept", concept_key)
 	grs.execute_query(q, self)
+	
+	# set priority level, timer controls whether or not this is used above so this is fine
+	busy_priority_level = c.priority
 
 ## Emits a response from the actor.
 func emit_response(response: GrsResponse):
 	emit_signal("response", response.responseType, response.response)
+	_busy_reset_timer.start(response.delay)
