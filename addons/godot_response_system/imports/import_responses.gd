@@ -32,24 +32,41 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 
 	var data = preload("../grs_responses_dict.gd").new()
 
+	var responseGroup = GrsResponseGroup.new()
+
 	for line: Dictionary in csv.records:
-		var c = GrsRule.new()
+		var cname: String = line.get("name", "").strip_edges()
+		if cname != "" and responseGroup.responses.size() > 0:
+			# save last response group
+			if data.responses.has(responseGroup.cname.to_lower()):
+				printerr("Response / group [", responseGroup.cname, "] was found multiple times in the same CSV file")
+				return FAILED
+			data.responses[responseGroup.cname.to_lower()] = responseGroup
+			
+			responseGroup = GrsResponseGroup.new()
 		
-		c.cname = line.get("name", "NameNotFound").strip_edges()
+		if cname != "":
+			responseGroup.cname = cname
 		
-		for criterion in line.get("criteria", "").split(" "):
-			if criterion != "" and not c.criteria.has(criterion):
-				c.criteria.append(criterion)
+		var responseType: String = line.get("responsetype", "").strip_edges()
+		var response: String = line.get("responsetype", "").strip_edges()
 		
-		for response in line.get("responses", "").split(" "):
-			if response != "" and not c.responses.has(response):
-				c.responses.append(response)
+		if responseType != "":
+			var c = GrsResponse.new()
+			
+			c.responseType = responseType
+			c.response = response
+			
+			responseGroup.responses.append(c)
 
-		if data.rules.has(c.cname.to_lower()):
-			printerr("Rule [", c.cname, "] was found multiple times in the same CSV file")
+	if responseGroup.cname != "" and responseGroup.responses.size() > 0:
+		# save last response group
+		if data.responses.has(responseGroup.cname.to_lower()):
+			printerr("Response / group [", responseGroup.cname, "] was found multiple times in the same CSV file")
 			return FAILED
-
-		data.rules[c.cname.to_lower()] = c
+		data.responses[responseGroup.cname.to_lower()] = responseGroup
+		
+		responseGroup = GrsResponseGroup.new()
 
 	var filename = save_path + "." + _get_save_extension()
 	var err = ResourceSaver.save(data, filename)

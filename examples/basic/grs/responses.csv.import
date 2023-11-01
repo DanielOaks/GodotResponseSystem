@@ -1,3 +1,15 @@
 [remap]
 
-importer="keep"
+importer="pix.grs.responses.csv"
+type="Resource"
+uid="uid://c5j4mhb35degl"
+path="res://.godot/imported/responses.csv-bdf290de547fceba82da8f905afbb8dc.res"
+
+[deps]
+
+source_file="res://examples/basic/grs/responses.csv"
+dest_files=["res://.godot/imported/responses.csv-bdf290de547fceba82da8f905afbb8dc.res"]
+
+[params]
+
+delimiter=0
