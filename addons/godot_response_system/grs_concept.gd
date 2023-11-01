@@ -1,3 +1,4 @@
+extends Resource
 class_name GrsConcept
 
 @export var cname: String

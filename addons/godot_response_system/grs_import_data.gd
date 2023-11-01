@@ -1,5 +1,5 @@
 extends Resource
-class_name GrsData
+class_name GrsImportData
 
 @export var concepts: Dictionary
 @export var criteria: Dictionary

@@ -30,10 +30,10 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 		printerr("Missing required column. Try checking the delimiter and other import settings.")
 		return FAILED
 
-	var data = GrsData.new()
+	var data = GrsImportData.new()
 
 	for line: Dictionary in csv.records:
-		var c = GrsCritereon.new()
+		var c = GrsCriterion.new()
 		
 		c.cname = line.get("name", "NameNotFound").strip_edges()
 		c.fact = line.get("fact", "FactNotFound").strip_edges()

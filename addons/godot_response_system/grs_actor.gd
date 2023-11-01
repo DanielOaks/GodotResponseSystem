@@ -4,8 +4,18 @@ class_name GrsActor
 ## Emitted when a new response is ready from GRS.
 signal response(type: String, content: String)
 
+## Unique key to refer to this actor
+var key: String :
+	get:
+		return actorName.strip_edges().to_lower()
+
 ## How we refer to this actor in the rules database.
 @export var actorName := ""
+
+## Whether this actor should automatically add itself to GRS. If unchecking this, you'll need to
+## make a `GRS.add_actor()` call yourself. In either case, the actor will automatically remove
+## itself from GRS on exiting the node tree.
+@export var autoAddToGrs := true
 
 @export_group("Idle barks")
 
@@ -39,7 +49,8 @@ func _enter_tree():
 
 	# add self to GRS
 	grs = get_node("/root/GodotResponseSystem")
-	grs.add_actor(self)
+	if autoAddToGrs:
+		grs.add_actor(self)
 
 func _exit_tree():
 	# remove self from GRS
@@ -63,4 +74,11 @@ func emit_idle():
 
 ## Sends an event to GRS.
 func dispatch(concept: String):
-	print_debug("Dispatching concept from ", actorName, " to GRS: ", concept)
+	var q := GrsQuery.new()
+	q.facts.set_fact("who", key)
+	q.facts.set_fact("concept", concept.strip_edges().to_lower())
+	grs.execute_query(q, self)
+
+## Emits a response from the actor.
+func emit_response(response: GrsResponse):
+	emit_signal("response", response.responseType, response.response)

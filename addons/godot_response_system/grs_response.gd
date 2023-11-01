@@ -1,4 +1,4 @@
-extends Node
+extends Resource
 class_name GrsResponse
 
 @export var responseType: String

@@ -30,7 +30,7 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 		printerr("Missing required column. Try checking the delimiter and other import settings.")
 		return FAILED
 
-	var data = GrsData.new()
+	var data = GrsImportData.new()
 
 	var responseGroup = GrsResponseGroup.new()
 
@@ -49,7 +49,7 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 			responseGroup.cname = cname
 		
 		var responseType: String = line.get("responsetype", "").strip_edges()
-		var response: String = line.get("responsetype", "").strip_edges()
+		var response: String = line.get("response", "").strip_edges()
 		
 		if responseType != "":
 			var c = GrsResponse.new()

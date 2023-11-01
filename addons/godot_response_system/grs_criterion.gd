@@ -1,4 +1,5 @@
-class_name GrsCritereon
+extends Resource
+class_name GrsCriterion
 
 @export var cname: String
 @export var fact: String
