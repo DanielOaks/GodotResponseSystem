@@ -102,9 +102,9 @@ text = "em"
 
 [node name="GrsActor" type="Node" parent="Em"]
 script = ExtResource("3_weenp")
-actorName = "em"
-idlePeriod = 8.5
-idleJitter = 4.0
+actor_name = "Em"
+idle_period = 7.0
+idle_jitter = 2.5
 
 [connection signal="no_longer_busy" from="Em/GrsActor" to="." method="_on_grs_actor_no_longer_busy"]
 [connection signal="response" from="Em/GrsActor" to="." method="_on_grs_actor_response"]
