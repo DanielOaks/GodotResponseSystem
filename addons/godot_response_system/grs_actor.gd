@@ -115,7 +115,7 @@ func dispatch(concept: String):
 	# get  queryfacts
 	var q: GrsQuery = GrsQuery.new()
 	q.facts = GrsFacts.new()
-	if get_query_facts != null:
+	if get_query_facts.is_valid():
 		q.facts = get_query_facts.call(self)
 	
 	q.facts.set_fact("who", key)
