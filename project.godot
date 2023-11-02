@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="GodotResponseSystemExample"
+config/name="Godot Response System"
 config/features=PackedStringArray("4.2", "Forward Plus")
 config/icon="res://logo.png"
 

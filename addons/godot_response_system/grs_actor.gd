@@ -42,9 +42,9 @@ var _busy_reset_timer: Timer
 
 var facts: GrsFacts
 
-## Connect a function here which updates this actor's facts. This function takes one parameter,
+## Connect a function here which returns this actor's facts. This function takes one parameter,
 ## the actor which calls it.
-var update_facts: Callable
+var get_query_facts: Callable
 
 func _enter_tree():
 	# create facts
@@ -112,18 +112,17 @@ func dispatch(concept: String):
 		# new concept cannot interrupt current concept
 		return
 	
-	# update actor facts.
-	# TODO: maybe better to keep this out of the player facts, since it's not useful to keep these
-	# facts between each time they're updated. keep these on the query itself, and reserve actor
-	# facts for things that should be saved?
-	if update_facts != null:
-		update_facts.call(self)
+	# get  queryfacts
+	var q: GrsQuery = GrsQuery.new()
+	q.facts = GrsFacts.new()
+	if get_query_facts != null:
+		q.facts = get_query_facts.call(self)
 	
-	# dispatch to grs
-	var q := GrsQuery.new()
 	q.facts.set_fact("who", key)
 	q.facts.set_fact("concept", concept_key)
 	q.extra_fact_dictionaries.append(facts)
+	
+	# execute query
 	grs.execute_query(q, self)
 	
 	# set priority level, timer controls whether or not this is used above so this is fine

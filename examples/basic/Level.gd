@@ -11,11 +11,13 @@ func _ready():
 	grs.load(preload("res://examples/basic/grs/rules.csv"))
 	grs.load(preload("res://examples/basic/grs/responses.csv"))
 	
-	em_actor.update_facts = _update_em_facts
+	em_actor.get_query_facts = _get_em_facts
 
-func _update_em_facts(actor: GrsActor):
+func _get_em_facts(_actor) -> GrsFacts:
+	var facts := GrsFacts.new()
 	var distanceFromPlayer = player.global_position.distance_to($Em.global_position)
-	actor.facts.set_fact("playerDistance", distanceFromPlayer)
+	facts.set_fact("playerDistance", distanceFromPlayer)
+	return facts
 
 func _on_grs_actor_response(type: String, content: String):
 	if type == "say":
