@@ -3,3 +3,4 @@ ConceptIdle,concept,"""idlebark"""
 ConceptStare,concept,"""stare"""
 IsEm,who,"""em"""
 AmRepairing,action,"""repairing"""
+PlayerClose,playerDistance,<150

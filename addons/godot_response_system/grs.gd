@@ -59,28 +59,44 @@ func execute_query(query: GrsQuery, actor: GrsActor):
 			
 			var value = query.facts.get_fact(criterion.fact)
 			if value == null:
-				# TODO: check other fact dictionaries here
+				# search other fact dictionaries for this value
 				this_rule_matches = false
-				break
+				for extra_facts in query.extra_fact_dictionaries:
+					value = extra_facts.get_fact(criterion.fact)
+					if value != null:
+						this_rule_matches = true
+				
+				if this_rule_matches == false:
+					break
+			
+			var match_is_successful = false
 			
 			if criterion.matchValue.begins_with('"') and criterion.matchValue.ends_with('"'):
 				# comparing strings directly
-				var matching_string = criterion.matchValue.left(-1).right(-1)
-				var match_is_successful = matching_string == value
+				var matching_value = criterion.matchValue.left(-1).right(-1)
+				match_is_successful = matching_value == value
 				evaluated_criteria[key] = match_is_successful
+			elif criterion.matchValue.begins_with('<'):
+				# TODO: handle numeric comparisons much better than this
+				var matching_value := criterion.matchValue.right(-1).to_float()
+				match_is_successful = value < matching_value
 				
-				if not match_is_successful:
-					# skip to next rule
-					this_rule_matches = false
-					break
+				evaluated_criteria[key] = match_is_successful
 			else:
 				print_debug("Cannot match value, skipping rule ", rule.cname)
-				
+				this_rule_matches = false
+				break
+
+			if not match_is_successful:
+				# skip to next rule
 				this_rule_matches = false
 				break
 
 		if this_rule_matches:
-			possible_rules.append(rule)
+			# TODO: improve this by doing the weightings more smartly. this is a very naive way
+			# of implementing this kind of preference for higher-weighted rules
+			for i in rule.criteria.size():
+				possible_rules.append(rule)
 
 	if possible_rules.size() == 0:
 		return
