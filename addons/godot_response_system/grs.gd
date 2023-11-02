@@ -1,23 +1,42 @@
 extends Node
 class_name GRS
+## GRS (Godot Response System) is a singleton that evaluates and runs queries from actors.
+## It keeps a list of actors, concepts, criteria, rules, and responses, and uses these to test
+## incoming [GrsQuery]s.
+##
+## You shouldn't need to do much with this class directly, apart from loading the data into it.
 
-@onready var actors := {}
-@export var concepts: Dictionary
-@export var criteria: Dictionary
-@export var rules: Dictionary
-@export var responses: Dictionary
+## Contains the active [GrsActor]s which can receive responses.
+var actors: Dictionary
 
-## Add an actor to GRS.
+## Contains our current set of concepts, populated by [method GRS.load]
+var concepts: Dictionary
+
+## Contains our current set of criteria, populated by [method GRS.load]
+var criteria: Dictionary
+
+## Contains our current set of rules, populated by [method GRS.load]
+var rules: Dictionary
+
+## Contains our current set of responses, populated by [method GRS.load]
+var responses: Dictionary
+
+## Add an actor to GRS. This allows the actor to receive responses from the response system.
+## Note, most actors will automatically add themselves to the response system on joining the scene
+## tree, so you should not need to use this method.
 func add_actor(actor: GrsActor):
 	if actors.has(actor.key) and not actors.get(actor.key) == actor:
 		print_debug("Replacing existing actor with newly-added one: ", actor.actorName)
 	actors[actor.key] = actor
 
-## Remove an actor from GRS.
+## Remove an actor from GRS. Note, actors remove themselves from the response system on leaving the
+## scene tree, so only use this method if you're sure you want to unload an actor early.
 func remove_actor(actor: GrsActor):
 	actors.erase(actor.key)
 
-## Load new concept, criteria, rule, or response information.
+## Loads new data into the response system. This is a type of imported data, e.g. concepts,
+## criteria, rules, or responses. This should be called once on game start for each type of
+## resource to load.
 func load(new_data: GrsImportData):
 	for cname in new_data.concepts:
 		var slug = cname.to_lower()
@@ -43,6 +62,8 @@ func load(new_data: GrsImportData):
 			print_debug("Replacing existing response with a newly-loaded one: ", cname)
 		responses[slug] = new_data.responses[cname]
 
+## Execute the given query, coming from the given actor. We search the current rule database,
+## and if there's a matching rule the system sends the response to the actor.
 func execute_query(query: GrsQuery, actor: GrsActor):
 	var possible_rules: Array[GrsRule] = []
 	var evaluated_criteria := {}
