@@ -36,12 +36,12 @@ func _import_csv_file(source_file, save_path, options, platform_variants, gen_fi
 			delim = ","
 		Delimiters.TAB:
 			delim = "\t"
-	
+
 	var file = FileAccess.open(source_file, FileAccess.READ)
 	if not file:
 		printerr("Failed to open file: ", source_file)
 		return
-	
+
 	# get lines
 	var lines := []
 	while not file.eof_reached():
@@ -49,10 +49,10 @@ func _import_csv_file(source_file, save_path, options, platform_variants, gen_fi
 		if line.size() > 0:
 			lines.append(line)
 	file.close()
-	
+
 	# create records
 	var data := preload("base_csv_data.gd").new()
-	
+
 	var headers = lines[0]
 	for i in range(1, lines.size()):
 		var fields = lines[i]
@@ -65,5 +65,5 @@ func _import_csv_file(source_file, save_path, options, platform_variants, gen_fi
 			var value = fields[j] if j < fields.size() else null
 			dict[name] = value
 		data.records.append(dict)
-	
+
 	return data

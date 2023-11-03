@@ -25,7 +25,7 @@ func _get_import_order():
 
 func _import(source_file, save_path, options, platform_variants, gen_files):
 	var csv = _import_csv_file(source_file, save_path, options, platform_variants, gen_files)
-	
+
 	if csv.records.size() > 0 and not csv.records[0].has_all(["name", "criteria", "responses"]):
 		printerr("Missing required column. Try checking the delimiter and other import settings.")
 		return FAILED
@@ -34,14 +34,14 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 
 	for line: Dictionary in csv.records:
 		var c = GrsRule.new()
-		
+
 		c.cname = line.get("name", "NameNotFound").strip_edges()
-		
+
 		for criterion in line.get("criteria", "").split(" "):
 			criterion = criterion.to_lower()
 			if criterion != "" and not c.criteria.has(criterion):
 				c.criteria.append(criterion)
-		
+
 		for response in line.get("responses", "").split(" "):
 			response = response.to_lower()
 			if response != "" and not c.responses.has(response):

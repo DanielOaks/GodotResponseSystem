@@ -25,7 +25,7 @@ func _get_import_order():
 
 func _import(source_file, save_path, options, platform_variants, gen_files):
 	var csv = _import_csv_file(source_file, save_path, options, platform_variants, gen_files)
-	
+
 	if csv.records.size() > 0 and not csv.records[0].has_all(["name"]):
 		printerr("Missing column 'name'. Try checking the delimiter and other import settings.")
 		return FAILED
@@ -34,9 +34,9 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 
 	for line: Dictionary in csv.records:
 		var c = GrsConcept.new()
-		
+
 		c.cname = line.get("name", "NameNotFound").strip_edges()
-		
+
 		var priorityString = line.get("priority", "0").strip_edges().to_lower()
 		if priorityString == "":
 			priorityString = "0"

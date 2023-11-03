@@ -25,7 +25,7 @@ func _get_import_order():
 
 func _import(source_file, save_path, options, platform_variants, gen_files):
 	var csv = _import_csv_file(source_file, save_path, options, platform_variants, gen_files)
-	
+
 	if csv.records.size() > 0 and not csv.records[0].has_all(["name", "responsetype", "response"]):
 		printerr("Missing required column. Try checking the delimiter and other import settings.")
 		return FAILED
@@ -42,21 +42,21 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 				printerr("Response / group [", responseGroup.cname, "] was found multiple times in the same CSV file")
 				return FAILED
 			data.responses[responseGroup.cname.to_lower()] = responseGroup
-			
+
 			responseGroup = GrsResponseGroup.new()
-		
+
 		if cname != "":
 			responseGroup.cname = cname
-		
+
 		var responseType: String = line.get("responsetype", "").strip_edges()
 		var response: String = line.get("response", "").strip_edges()
-		
+
 		if responseType != "":
 			var c = GrsResponse.new()
-			
+
 			c.responseType = responseType
 			c.response = response
-			
+
 			responseGroup.responses.append(c)
 
 	if responseGroup.cname != "" and responseGroup.responses.size() > 0:
@@ -65,7 +65,7 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 			printerr("Response / group [", responseGroup.cname, "] was found multiple times in the same CSV file")
 			return FAILED
 		data.responses[responseGroup.cname.to_lower()] = responseGroup
-		
+
 		responseGroup = GrsResponseGroup.new()
 
 	var filename = save_path + "." + _get_save_extension()

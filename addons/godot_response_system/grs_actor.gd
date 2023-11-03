@@ -57,13 +57,13 @@ var get_query_facts: Callable
 func _enter_tree():
 	# create facts
 	facts = GrsFacts.new()
-	
+
 	# create idle timer
 	_idle_timer = Timer.new()
 	add_child(_idle_timer)
 	_idle_timer.one_shot = true
 	_idle_timer.timeout.connect(emit_idle)
-	
+
 	# create busy timer
 	_busy_reset_timer = Timer.new()
 	add_child(_busy_reset_timer)
@@ -122,20 +122,20 @@ func dispatch(concept: String):
 	else:
 		# new concept cannot interrupt current concept
 		return
-	
+
 	# get  queryfacts
 	var q: GrsQuery = GrsQuery.new()
 	q.facts = GrsFacts.new()
 	if get_query_facts.is_valid():
 		q.facts = get_query_facts.call(self)
-	
+
 	q.facts.set_fact("who", key)
 	q.facts.set_fact("concept", concept_key)
 	q.extra_fact_dictionaries.append(facts)
-	
+
 	# execute query
 	_grs.execute_query(q, self)
-	
+
 	# set priority level, timer controls whether or not this is used above so this is fine
 	_busy_priority_level = c.priority
 
