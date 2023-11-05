@@ -1,5 +1,5 @@
-extends Node
 class_name GRS
+extends Node
 ## GRS (Godot Response System) is a singleton that evaluates and runs queries from actors.
 ## It keeps a list of actors, concepts, criteria, rules, and responses, and uses these to test
 ## incoming [GrsQuery]s.

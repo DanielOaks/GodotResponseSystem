@@ -1,5 +1,5 @@
-extends Node
 class_name GrsFacts
+extends Node
 
 var _facts := {}
 

@@ -1,5 +1,5 @@
-extends EditorImportPlugin
 class_name BaseCsvImporter
+extends EditorImportPlugin
 
 enum Presets { CSV, TSV }
 enum Delimiters { COMMA, TAB }

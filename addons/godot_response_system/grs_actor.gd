@@ -1,5 +1,5 @@
-extends Node
 class_name GrsActor
+extends Node
 ## Represents an entity (NPC, object, etc) that can receive and emit responses.
 ##
 ## Actors send queries to the response system, and can receive responses. In addition a

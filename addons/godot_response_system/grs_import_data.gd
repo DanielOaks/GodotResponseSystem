@@ -1,5 +1,5 @@
-extends Resource
 class_name GrsImportData
+extends Resource
 
 @export var concepts: Dictionary
 @export var criteria: Dictionary
