@@ -62,18 +62,48 @@ func load(new_data: GrsImportData):
 			print_debug("Replacing existing response with a newly-loaded one: ", cname)
 		responses[slug] = new_data.responses[cname]
 
+const FLOAT_MATCH_TOLERANCE = 0.001
+
+# matchers are intentionally not documented here. they're in the readme
 func does_match(value: Variant, matches: String) -> bool:
+	var invert := false
+	if matches.begins_with("!"):
+		invert = true
+		matches = matches.right(-1)
+	if matches.begins_with("="):
+		matches = matches.right(-1)
+
+	var result: bool = false
+
+	# do string comparison first, to avoid type issues.
+	# (comparing invalid types breaks things)
 	if matches.begins_with('"') and matches.ends_with('"'):
 		# comparing strings directly
-		return matches.left(-1).right(-1) == value
+		if typeof(value) == TYPE_STRING:
+			result = matches.left(-1).right(-1) == value
+		else:
+			print_debug("GRS: can't match [", matches, "] to value [", value, "] as value is a ", typeof(value))
+		return !result if invert else result
+
+	# all numeric matches are below, so ignore strings here
+	if typeof(value) == TYPE_STRING:
+		print_debug("GRS: can't check numeric matcher [", matches, "] against string type [", value, "]")
+		return !result if invert else result
+
+	# now do all the non-string comparisons
+	if matches.is_valid_float():
+		# comparing numbers directly
+		result = absf(matches.to_float() - value) < FLOAT_MATCH_TOLERANCE
 	elif matches.begins_with('<'):
 		# TODO: handle numeric comparisons much better than this
-		return value < matches.right(-1).to_float()
+		result = value < matches.right(-1).to_float()
 	elif matches.begins_with('>'):
 		# TODO: handle numeric comparisons much better than this
-		return value > matches.right(-1).to_float()
-	print_debug("GRS: unknown match, yet to be implemented: [", matches, "]")
-	return false
+		result = value > matches.right(-1).to_float()
+	else:
+		print_debug("GRS: unknown match type, yet to be implemented: [", matches, "]")
+
+	return !result if invert else result
 
 ## Execute the given query, coming from the given actor. We search the current rule database,
 ## and if there's a matching rule the system sends the response to the actor.

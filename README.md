@@ -79,20 +79,20 @@ Here's how the types of data are related:
 
 ```mermaid
 flowchart LR
-    subgraph Query
-        direction LR
-        subgraph Facts
-        	direction LR
-            ConceptFact(concept: 'idle')
-            WhoFact(who: 'em')
-            RadioDistanceFact(radioDistance: 4.6)
-        end
-    end
+	subgraph Query
+		direction LR
+		subgraph Facts
+			direction LR
+			ConceptFact(concept: 'idle')
+			WhoFact(who: 'em')
+			RadioDistanceFact(radioDistance: 4.6)
+		end
+	end
 	Query -->|tests| FoundRadioRule
 	subgraph GRS
-        direction LR
+		direction LR
 		subgraph FoundRadioRule
-        	direction LR
+			direction LR
 			Criterion1(is character 'Em'<br>criterion) ---|checks| Fact1(who == 'em')
 			Criterion2(is near 'radio'<br>criterion) ---|checks| Fact2(radioDistance < 10)
 		end
@@ -122,9 +122,10 @@ Columns:
 - `name`: the name of this criterion. e.g. `PlayerIsHurt`, `PlayerReallyHurt`, `TurretNearby`.
 - `fact`: the name of the fact to compare against, e.g. `playerDistance`, `cash`, `name`.
 - `match`: check to perform against the given fact:
+	- Invert: `!` or `!=` before the matcher
 	- Equals value: `250`, `"charlie"` (the quotation marks are required for strings)
 	- Not equal to: `!=250`, `!="bob"` (the quotation marks are required for strings)
-	- Range: `<300` (less than 300), `<=20` (less than or equal to 20), `>30,<50` (between 30 and 50)
+	- Range: `<300` (less than 300), `>20` (over 20), (NOT IMPLEMENTED YET: `>30,<50` (between 30 and 50))
 - `weight`: weight of this criterion when comparing different rules. default `1.0`.
 - `optional`: means that this criteria is optional (the rule can still succeed if this criterion fails, this just adds weight if true).
 
