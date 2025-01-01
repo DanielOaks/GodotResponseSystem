@@ -40,6 +40,10 @@ var key: String :
 ## Add up to this much time, randomly, between each idle query.
 @export var idle_jitter: float = 0.5
 
+## If under 1, some idle events will be skipped. For example, 0.8 means only 80% of idle events
+## will fire.
+@export var idle_trigger_chance: float = 1.0
+
 var _grs: GRS
 var _idle_timer: Timer
 
@@ -97,7 +101,8 @@ func _idle_wait_time() -> float:
 ## Emit an idle query to [GRS]. Automatically called if [param dispatch_barks] is true.
 func emit_idle():
 	# dispatch idle event to GRS
-	dispatch(idle_concept)
+	if randf() < idle_trigger_chance:
+		dispatch(idle_concept)
 
 	# start the next run
 	if dispatch_barks:
