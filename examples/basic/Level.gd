@@ -1,15 +1,15 @@
 extends Node2D
 
 @onready var grs := get_node("/root/GodotResponseSystem") as GRS
-@onready var player = $Character2D
+@onready var player = $Player
 @onready var em_actor = $Em/GrsActor
 
 func _ready():
 	# load data into GRS
-	grs.load(preload("res://examples/basic/grs/concepts.csv"))
-	grs.load(preload("res://examples/basic/grs/criteria.csv"))
-	grs.load(preload("res://examples/basic/grs/rules.csv"))
-	grs.load(preload("res://examples/basic/grs/responses.csv"))
+	grs.load(preload("res://examples/basic/grs/concepts.grsc-csv"))
+	grs.load(preload("res://examples/basic/grs/criteria.grsi-csv"))
+	grs.load(preload("res://examples/basic/grs/rules.grsu-csv"))
+	grs.load(preload("res://examples/basic/grs/responses.grsr-csv"))
 
 	em_actor.get_query_facts = _get_em_facts
 

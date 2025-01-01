@@ -62,6 +62,19 @@ func load(new_data: GrsImportData):
 			print_debug("Replacing existing response with a newly-loaded one: ", cname)
 		responses[slug] = new_data.responses[cname]
 
+func does_match(value: Variant, matches: String) -> bool:
+	if matches.begins_with('"') and matches.ends_with('"'):
+		# comparing strings directly
+		return matches.left(-1).right(-1) == value
+	elif matches.begins_with('<'):
+		# TODO: handle numeric comparisons much better than this
+		return value < matches.right(-1).to_float()
+	elif matches.begins_with('>'):
+		# TODO: handle numeric comparisons much better than this
+		return value > matches.right(-1).to_float()
+	print_debug("GRS: unknown match, yet to be implemented: [", matches, "]")
+	return false
+
 ## Execute the given query, coming from the given actor. We search the current rule database,
 ## and if there's a matching rule the system sends the response to the actor.
 func execute_query(query: GrsQuery, actor: GrsActor):
@@ -90,23 +103,8 @@ func execute_query(query: GrsQuery, actor: GrsActor):
 				if this_rule_matches == false:
 					break
 
-			var match_is_successful = false
-
-			if criterion.matchValue.begins_with('"') and criterion.matchValue.ends_with('"'):
-				# comparing strings directly
-				var matching_value = criterion.matchValue.left(-1).right(-1)
-				match_is_successful = matching_value == value
-				evaluated_criteria[key] = match_is_successful
-			elif criterion.matchValue.begins_with('<'):
-				# TODO: handle numeric comparisons much better than this
-				var matching_value := criterion.matchValue.right(-1).to_float()
-				match_is_successful = value < matching_value
-
-				evaluated_criteria[key] = match_is_successful
-			else:
-				print_debug("Cannot match value, skipping rule ", rule.cname)
-				this_rule_matches = false
-				break
+			var match_is_successful = does_match(value, criterion.matchValue)
+			evaluated_criteria[key] = match_is_successful
 
 			if not match_is_successful:
 				# skip to next rule

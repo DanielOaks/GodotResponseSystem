@@ -4,6 +4,9 @@ extends EditorImportPlugin
 enum Presets { CSV, TSV }
 enum Delimiters { COMMA, TAB }
 
+func _get_priority():
+	return 2.0
+
 func _get_preset_count():
 	return Presets.size()
 

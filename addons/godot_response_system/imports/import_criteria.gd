@@ -10,7 +10,7 @@ func _get_visible_name():
 	return "GRS Criteria CSV"
 
 func _get_recognized_extensions():
-	return ["csv"]
+	return ["csv", "grsi-csv"]
 
 func _get_save_extension():
 	return "res"

@@ -1,0 +1,15 @@
+[remap]
+
+importer="pix.grs.criteria.csv"
+type="Resource"
+uid="uid://n2mtsfh84743"
+path="res://.godot/imported/criteria.grsi-csv-c50d6b2c2d06083d57ee09af433e5345.res"
+
+[deps]
+
+source_file="res://examples/basic/grs/criteria.grsi-csv"
+dest_files=["res://.godot/imported/criteria.grsi-csv-c50d6b2c2d06083d57ee09af433e5345.res"]
+
+[params]
+
+delimiter=0

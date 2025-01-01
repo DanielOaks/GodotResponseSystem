@@ -10,16 +10,16 @@ const AUTOLOAD_NAME = "GodotResponseSystem"
 
 func _enter_tree():
 	# add importers
-	import_concepts_csv_plugin = load("imports/import_concepts.gd").new()
+	import_concepts_csv_plugin = load("res://addons/godot_response_system/imports/import_concepts.gd").new()
 	add_import_plugin(import_concepts_csv_plugin)
 
-	import_criteria_csv_plugin = load("imports/import_criteria.gd").new()
+	import_criteria_csv_plugin = load("res://addons/godot_response_system/imports/import_criteria.gd").new()
 	add_import_plugin(import_criteria_csv_plugin)
 
-	import_rules_csv_plugin = load("imports/import_rules.gd").new()
+	import_rules_csv_plugin = load("res://addons/godot_response_system/imports/import_rules.gd").new()
 	add_import_plugin(import_rules_csv_plugin)
 
-	import_responses_csv_plugin = load("imports/import_responses.gd").new()
+	import_responses_csv_plugin = load("res://addons/godot_response_system/imports/import_responses.gd").new()
 	add_import_plugin(import_responses_csv_plugin)
 
 	# add GRS

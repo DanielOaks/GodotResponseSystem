@@ -1,9 +1,9 @@
 [gd_scene load_steps=9 format=3 uid="uid://btxvjylr5w217"]
 
-[ext_resource type="Script" path="res://examples/basic/Character2D.gd" id="1_c5d2o"]
-[ext_resource type="Script" path="res://examples/basic/Level.gd" id="1_endrk"]
+[ext_resource type="Script" uid="uid://bj6x83ko4kyxd" path="res://examples/basic/Character2D.gd" id="1_c5d2o"]
+[ext_resource type="Script" uid="uid://cgfnhtdwohd4b" path="res://examples/basic/Level.gd" id="1_endrk"]
 [ext_resource type="Texture2D" uid="uid://bhgdfmr16l018" path="res://examples/basic/sprites/cloud.png" id="2_n0gi8"]
-[ext_resource type="Script" path="res://addons/godot_response_system/grs_actor.gd" id="3_weenp"]
+[ext_resource type="Script" uid="uid://c61pvx0rx50bj" path="res://addons/godot_response_system/grs_actor.gd" id="3_weenp"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4a06j"]
 size = Vector2(730, 17)
