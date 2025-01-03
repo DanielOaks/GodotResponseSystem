@@ -6,6 +6,9 @@ extends Node
 ##
 ## You shouldn't need to do much with this class directly, apart from loading the data into it.
 
+var debug: bool = false
+var suppress_concepts: Array[String]
+
 ## Contains the active [GrsActor]s which can receive responses.
 var actors: Dictionary
 
@@ -43,24 +46,32 @@ func load(new_data: GrsImportData):
 		if slug in concepts:
 			print_debug("Replacing existing concept with a newly-loaded one: ", cname)
 		concepts[slug] = new_data.concepts[cname]
+	if debug and new_data.concepts.size():
+		print("[GRS] Concepts loaded: ", concepts.size())
 
 	for cname in new_data.criteria:
 		var slug = cname.to_lower()
 		if slug in criteria:
 			print_debug("Replacing existing criterion with a newly-loaded one: ", cname)
 		criteria[slug] = new_data.criteria[cname]
+	if debug and new_data.criteria.size():
+		print("[GRS] Criteria loaded: ", criteria.size())
 
 	for cname in new_data.rules:
 		var slug = cname.to_lower()
 		if slug in rules:
 			print_debug("Replacing existing rule with a newly-loaded one: ", cname)
 		rules[slug] = new_data.rules[cname]
+	if debug and new_data.rules.size():
+		print("[GRS] Rules loaded: ", rules.size())
 
 	for cname in new_data.responses:
 		var slug = cname.to_lower()
 		if slug in responses:
 			print_debug("Replacing existing response with a newly-loaded one: ", cname)
 		responses[slug] = new_data.responses[cname]
+	if debug and new_data.responses.size():
+		print("[GRS] Responses loaded: ", responses.size())
 
 const FLOAT_MATCH_TOLERANCE = 0.001
 
@@ -78,9 +89,9 @@ func does_match(value: Variant, matches: String) -> bool:
 	# do string comparison first, to avoid type issues.
 	# (comparing invalid types breaks things)
 	if matches.begins_with('"') and matches.ends_with('"'):
-		# comparing strings directly
+		# comparing strings directly, case insensitive
 		if typeof(value) == TYPE_STRING:
-			result = matches.left(-1).right(-1) == value
+			result = matches.left(-1).right(-1).to_lower() == value.to_lower()
 		else:
 			print_debug("GRS: can't match [", matches, "] to value [", value, "] as value is a ", typeof(value))
 		return !result if invert else result
@@ -107,13 +118,29 @@ func does_match(value: Variant, matches: String) -> bool:
 
 ## Execute the given query, coming from the given actor. We search the current rule database,
 ## and if there's a matching rule the system sends the response to the actor.
-func execute_query(query: GrsQuery, actor: GrsActor):
+## Returns true if this resulted in a response from the actor.
+func execute_query(query: GrsQuery, actor: GrsActor) -> bool:
+	var concept = query.facts.get_fact("concept")
+	if concept in suppress_concepts:
+		return false
+
+	if debug:
+		print("[GRS] Executing query: concept [", query.facts.get_fact("concept"), "] against actor ", actor.actor_name)
+		print("[GRS] with facts:")
+		query.facts.list_facts()
+
+	var largest_matching_rule_weight := 0
 	var possible_rules: Array[GrsRule] = []
 	var evaluated_criteria := {}
+
+	# random number attached to this query. used to create rare criterion, etc
+	query.facts.set_fact("randomnum", randf_range(0, 100))
 
 	for rule: GrsRule in rules.values():
 		var this_rule_matches := true
 
+		if debug:
+			print("  [GRS] Checking rule ", rule.cname)
 		for key in rule.criteria:
 			var criterion: GrsCriterion = criteria.get(key)
 			if criterion == null:
@@ -131,6 +158,8 @@ func execute_query(query: GrsQuery, actor: GrsActor):
 						this_rule_matches = true
 
 				if this_rule_matches == false:
+					if debug:
+						print("    [GRS] Rule not matched, missing fact: ", key, "  fact [", criterion.fact, "]")
 					break
 
 			var match_is_successful = does_match(value, criterion.matchValue)
@@ -139,18 +168,30 @@ func execute_query(query: GrsQuery, actor: GrsActor):
 			if not match_is_successful:
 				# skip to next rule
 				this_rule_matches = false
+				if debug:
+					print("    [GRS] Rule not matched, fact doesn't match: ", key, "  values [", value, "] [", criterion.matchValue, "]")
 				break
 
 		if this_rule_matches:
-			# TODO: improve this by doing the weightings more smartly. this is a very naive way
-			# of implementing this kind of preference for higher-weighted rules
-			for i in rule.criteria.size():
+			var current_rule_weight = rule.criteria.size()
+			if largest_matching_rule_weight < current_rule_weight:
+				possible_rules = []
+				largest_matching_rule_weight = current_rule_weight
+
+			if current_rule_weight == largest_matching_rule_weight:
 				possible_rules.append(rule)
+				if debug:
+					print("    [GRS] RULE MATCHED!")
+			else:
+				if debug:
+					print("    [GRS] Rule not matched, isn't specific enough")
 
 	if possible_rules.size() == 0:
-		return
+		return false
 
 	var matched_rule: GrsRule = possible_rules.pick_random()
+
+	var did_response = false
 
 	for key in matched_rule.responses:
 		var rg: GrsResponseGroup = responses.get(key)
@@ -159,6 +200,32 @@ func execute_query(query: GrsQuery, actor: GrsActor):
 			continue
 
 		# TODO: call response group so it can handle flags, etc
-		var r = rg.responses.pick_random()
+		var r: GrsResponse = rg.responses.pick_random()
 
 		actor.emit_response(r)
+		did_response = true
+
+		if r.thenActor and r.thenConcept:
+			var wait_seconds = actor.busy_time_left() + r.thenDelay
+
+			if debug:
+				print("[GRS] Response [", r.response, "] sent, now sending THEN concept ", r.thenConcept, " to actor ", r.thenActor, " after ", wait_seconds, " seconds.")
+
+			if r.thenActor == "self":
+				actor.dispatch_after(r.thenConcept, wait_seconds)
+			if r.thenActor == "any":
+				# TODO: randomise this iteration so we hit different actors each time?
+				await get_tree().create_timer(wait_seconds).timeout
+				for thenActor: GrsActor in actors.values():
+					if thenActor == actor:
+						continue
+					# only let one actor respond to this
+					var then_actor_did_response = await thenActor.dispatch(r.thenConcept)
+					if then_actor_did_response:
+						break
+			else:
+				var thenActor: GrsActor = actors.get(r.thenActor)
+				if thenActor:
+					thenActor.dispatch_after(r.thenConcept, wait_seconds)
+
+	return did_response

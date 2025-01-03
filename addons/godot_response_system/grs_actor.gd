@@ -113,20 +113,31 @@ func _emit_not_busy():
 	emit_signal("no_longer_busy")
 	_busy_priority_level = -999
 
-## Sends an event to [GRS] for evaluation.
-func dispatch(concept: String):
+## Returns how many seconds we'll still be busy for.
+func busy_time_left() -> float:
+	return _busy_reset_timer.time_left
+
+## Sends an event to [GRS] for evaluation, after waiting for the delay.
+## Returns true if a response is generated, but probably don't wait for that time to pass...
+func dispatch_after(concept: String, delay_seconds: float) -> bool:
+	await get_tree().create_timer(delay_seconds).timeout
+	return await dispatch(concept)
+
+## Sends an event to [GRS] for evaluation. Returns true if a response is generated.
+func dispatch(concept: String) -> bool:
 	# check concept priority
 	var concept_key = concept.strip_edges().to_lower()
 	var c: GrsConcept = _grs.concepts.get(concept_key)
 	if c == null:
-		print_debug("Concept ", concept, " is not defined, ignoring dispatch request")
+		print("[GRS] Concept ", concept, " is not defined, ignoring dispatch request")
+		return false
 
 	if _busy_reset_timer.is_stopped() or _busy_priority_level == -999 or c.priority > _busy_priority_level:
 		# keep going
 		pass
 	else:
 		# new concept cannot interrupt current concept
-		return
+		return false
 
 	# get  queryfacts
 	var q: GrsQuery = GrsQuery.new()
@@ -139,10 +150,12 @@ func dispatch(concept: String):
 	q.extra_fact_dictionaries.append(facts)
 
 	# execute query
-	_grs.execute_query(q, self)
+	var response_generated = await _grs.execute_query(q, self)
 
 	# set priority level, timer controls whether or not this is used above so this is fine
 	_busy_priority_level = c.priority
+
+	return response_generated
 
 ## Emits the given response from this actor. This is used by [GRS] when the actor receives
 ## a response.

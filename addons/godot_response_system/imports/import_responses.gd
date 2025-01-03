@@ -50,12 +50,23 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 
 		var responseType: String = line.get("responsetype", "").strip_edges()
 		var response: String = line.get("response", "").strip_edges()
+		var busyforRaw: String = line.get("busyfor", "3").strip_edges()
+		if busyforRaw == "":
+			busyforRaw = "3"
+		var busyfor: float = busyforRaw.to_float()
+		var then: PackedStringArray = String(line.get("then")).split(" ", false)
 
 		if responseType != "":
 			var c = GrsResponse.new()
 
 			c.responseType = responseType
 			c.response = response
+			c.delay = busyfor
+			if then.size():
+				c.thenActor = then[0]
+				c.thenConcept = then[1]
+				if then.size() > 2:
+					c.thenDelay = then[2].to_float()
 
 			responseGroup.responses.append(c)
 

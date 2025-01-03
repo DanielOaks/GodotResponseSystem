@@ -65,7 +65,7 @@ func _import_csv_file(source_file, save_path, options, platform_variants, gen_fi
 		var dict = {}
 		for j in headers.size():
 			var name = headers[j]
-			var value = fields[j] if j < fields.size() else null
+			var value = fields[j].replace("\\n", "\n") if j < fields.size() else null
 			dict[name] = value
 		data.records.append(dict)
 
