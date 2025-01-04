@@ -135,8 +135,8 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 
 					c.responseType = rentry.get("responsetype", "").strip_edges()
 					c.response = rentry.get("response", "").strip_edges()
-					c.delay = rentry.get("busyfor", 3)
-					
+					c.delay = rentry.get("busyfor", 4)
+
 					var then: PackedStringArray = rentry.get("then", "").split(" ", false)
 					if then.size():
 						c.thenActor = then[0]
