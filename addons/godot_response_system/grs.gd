@@ -105,9 +105,15 @@ func does_match(value: Variant, matches: String) -> bool:
 	if matches.is_valid_float():
 		# comparing numbers directly
 		result = absf(matches.to_float() - value) < FLOAT_MATCH_TOLERANCE
+	elif matches.begins_with('<='):
+		# TODO: handle numeric comparisons much better than this
+		result = value <= matches.right(-2).to_float()
 	elif matches.begins_with('<'):
 		# TODO: handle numeric comparisons much better than this
 		result = value < matches.right(-1).to_float()
+	elif matches.begins_with('>='):
+		# TODO: handle numeric comparisons much better than this
+		result = value >= matches.right(-2).to_float()
 	elif matches.begins_with('>'):
 		# TODO: handle numeric comparisons much better than this
 		result = value > matches.right(-1).to_float()
