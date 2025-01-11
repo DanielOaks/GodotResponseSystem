@@ -29,7 +29,7 @@ var responses: Dictionary
 ## tree, so you should not need to use this method.
 func add_actor(actor: GrsActor):
 	if actors.has(actor.key) and not actors.get(actor.key) == actor:
-		print_debug("Replacing existing actor with newly-added one: ", actor.actorName)
+		print_debug("Replacing existing actor with newly-added one: ", actor.actor_name)
 	actors[actor.key] = actor
 
 ## Remove an actor from GRS. Note, actors remove themselves from the response system on leaving the

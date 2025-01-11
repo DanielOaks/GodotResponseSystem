@@ -1,0 +1,832 @@
+# GRS is designed after Valve's response system used in the Source engine, and is described in
+# their GDC talk "Rule Databases for Contextual Dialog and Game Logic"
+# For full docs you should view the plugin repo, but there's a quick rundown in the intro.
+#
+# to convert this file to json the game engine can load, run this command:
+#   yq -o json . base.yaml > base.grs-json
+
+# == BASICS ==
+# GRS is a fuzzy rule matching system, comparing facts to select which response is most
+# specific and valid currently.
+#
+# 1. Something happens in game engine (e.g. 'actor is hit', 'actor checks for an idle bark').
+# 2. Affected actor sends a query (concept + set of facts) to GRS.
+# 3. GRS checks all the rules it has loaded against the facts in the query, as well as any
+#    other fact dictionaries that apply (for the world, actor, etc).
+# 4. Based on the comparison, GRS matches the most specific rule. GRS selects a response
+#    from the response group that rule points to.
+# 5. The actor emits a signal with the response!
+# 6. (optionally) GRS makes more queries based on 'then' rules.
+
+# == CONCEPT ==
+# - type: concept
+#   name: 
+#   description: 
+#   priority: 0
+#
+# Why the system is being queried. These are events the programmers need to send to GRS for it
+# to work, e.g. 'IdleBark' (actor is idle), 'GotHit' (actor just got hit by something).
+# 
+# Concepts default to a priority of `0`. Concepts with a higher priority (`1`, `2`, `3`, etc)
+# will interrupt concepts with a lower priority (for example, to let a death noise interrupt
+# normal dialogue). If `nopriority` is given as a concept's priority, that concept will never
+# interrupt any other speech and the system will act as though no event is happening when
+# other responses check for activity.
+
+# == CRITERIA ==
+# - type: criteria
+#   name: 
+#   fact: 
+#   match: ''
+#
+# Named true/false check, used to create rules. For example, the criterion `PlayerNearby` may
+# be true if `playerDistance<300`. Criteria can be calculated once and then used by multiple
+# rules, which helps with performance.
+#
+# 'fact' is the name of a fact to compare against, and 'match' is the value to match against
+# that fact. For example, 'playerDistance' and '<300' would match if the player is close.
+#
+# Match values can be prefixed with ! or != to invert them, and can use this syntax:
+# - '"hurt"' = true if the fact is the string "hurt".
+# - '<30' = true if the fact is a number under 30.
+# - '>=10' = true if the fact is a number ten or above.
+#
+# Default facts:
+# - concept: The concept that initiated this query.
+# - randomnum: Random float from 0 to 100, calculated once before the query.
+
+# == RULE ==
+# - type: rule
+#   name: 
+#   criteria: 
+#   responses: 
+#   flags: 
+#   applyactorcontext: 
+#   applyworldcontext: 
+#
+# Set of one or more criteria to match, and one or more response groups to trigger. The 'rule
+# database' is what GRS compares incoming queries against.
+#
+# The criteria and responses list is separated by spaces, e.g. "IsSarah KatieNearby".
+#
+# For simplicity, try to start a rule's name off with the entity it's evaluated on. For
+# example, a rule checking whether a character named Em is idle should be named "EmIdle".
+
+# == RESPONSES ==
+# - type: responsegroup
+#   name: 
+#   flags: 
+#   responses:
+#     - responsetype: 
+#       response: 
+#       flags: 
+#       then: <actor|all> <concept>
+#       busyfor: 4.0
+#
+# How actors respond once a rule is matched. These include the lines of text to say, actions
+# to take, and more. GRS will pick one of the responses randomly from the group.
+#
+# When 'then' is given, GRS fires this new criteria on the given actor once the busy time has
+# passed. 'any' to test every nearby actor, and GRS will stop once an actor does a response.
+# See https://youtu.be/tAbBID3N64A?t=3341 for details.
+#
+# Response types:
+# - say: Say a line of text
+# - animation: Play the given animation
+
+
+## Basics
+
+- type: concept
+  name: idlebark
+  description: actor is idling
+- type: concept
+  name: stare
+  description: player has been looking at us for a while
+  priority: 1
+- type: concept
+  name: action
+  description: player has pressed the 'use' key on us
+  priority: 3
+
+- type: criteria
+  name: ConceptIdle
+  fact: concept
+  match: '"idlebark"'
+- type: criteria
+  name: ConceptStare
+  fact: concept
+  match: '"stare"'
+- type: criteria
+  name: ConceptAction
+  fact: concept
+  match: '"action"'
+# - type: criteria
+#   name: AmRepairing
+#   fact: action
+#   match: '"repairing"'
+
+- type: criteria
+  name: PlayerClose
+  fact: playerDistance
+  match: '<5'
+- type: criteria
+  name: NobodyTalkingNearby
+  fact: someoneTalkingNearby
+  match: '!1'
+
+- type: criteria
+  name: Disabled
+  fact: nofactatall
+  match: '"disabledfordebugging"'
+
+# these criteria let you add random chance for rare dialogue, or fall back to default dialogue
+# for a bit of variety if your game design means they'll never be called otherwise.
+#
+# more rare ones have higher weights to ensure they'll be picked, but ones it reaches 80%
+# we're just gambling with falling back so we eliminate the weight on those
+- type: criteria
+  name: Chance1%
+  fact: randomnum
+  match: '<=1'
+  weight: 22
+- type: criteria
+  name: Chance2%
+  fact: randomnum
+  match: '<=2'
+  weight: 21
+- type: criteria
+  name: Chance3%
+  fact: randomnum
+  match: '<=3'
+  weight: 20
+- type: criteria
+  name: Chance5%
+  fact: randomnum
+  match: '<=5'
+  weight: 19
+- type: criteria
+  name: Chance10%
+  fact: randomnum
+  match: '<=10'
+  weight: 18
+- type: criteria
+  name: Chance15%
+  fact: randomnum
+  match: '<=15'
+  weight: 17
+- type: criteria
+  name: Chance20%
+  fact: randomnum
+  match: '<=20'
+  weight: 16
+- type: criteria
+  name: Chance25%
+  fact: randomnum
+  match: '<=25'
+  weight: 15
+- type: criteria
+  name: Chance30%
+  fact: randomnum
+  match: '<=30'
+  weight: 14
+- type: criteria
+  name: Chance35%
+  fact: randomnum
+  match: '<=35'
+  weight: 13
+- type: criteria
+  name: Chance40%
+  fact: randomnum
+  match: '<=40'
+  weight: 12
+- type: criteria
+  name: Chance45%
+  fact: randomnum
+  match: '<=45'
+  weight: 11
+- type: criteria
+  name: Chance50%
+  fact: randomnum
+  match: '<=50'
+  weight: 10
+- type: criteria
+  name: Chance55%
+  fact: randomnum
+  match: '<=55'
+  weight: 9
+- type: criteria
+  name: Chance60%
+  fact: randomnum
+  match: '<=60'
+  weight: 8
+- type: criteria
+  name: Chance65%
+  fact: randomnum
+  match: '<=65'
+  weight: 7
+- type: criteria
+  name: Chance70%
+  fact: randomnum
+  match: '<=70'
+  weight: 6
+- type: criteria
+  name: Chance75%
+  fact: randomnum
+  match: '<=75'
+  weight: 5
+- type: criteria
+  name: Chance80%
+  fact: randomnum
+  match: '<=80'
+  weight: 0
+- type: criteria
+  name: Chance85%
+  fact: randomnum
+  match: '<=85'
+  weight: 0
+- type: criteria
+  name: Chance90%
+  fact: randomnum
+  match: '<=90'
+  weight: 0
+- type: criteria
+  name: Chance95%
+  fact: randomnum
+  match: '<=95'
+  weight: 0
+
+
+## == Below is where you replace the examples with your own criteria, rules, and responses
+
+
+## Katie
+#
+# Happy-go-lucky teacher, likes cats!
+
+- type: criteria
+  name: IsKatie
+  fact: who
+  match: '"katie"'
+
+- type: criteria
+  name: KatieInCafe
+  fact: patronkatieInCafe
+  match: '1'
+
+- type: criteria
+  name: KatieClose
+  fact: patronkatieDistance
+  match: '<7'
+
+
+- type: rule
+  name: KatieIdle
+  criteria: IsKatie ConceptIdle NobodyTalkingNearby
+  responses: KatieIdle
+
+- type: responsegroup
+  name: KatieIdle
+  responses:
+    - responsetype: say
+      response: I love this place
+    - responsetype: say
+      response: Maybe my students would like it here
+    - responsetype: say
+      response: I want to spend my whole life in this room
+    - responsetype: say
+      response: Hmm, I need to call Tryce's dad...
+    - responsetype: say
+      response: What to teach next week, astro-physics?
+      then: self KatieTeachAstrophysics
+    - responsetype: say
+      response: Where did I put those flashcards...
+    - responsetype: say
+      response: Jeez, I want to pet all of you!
+      then: any KatiePetAllofyou
+
+# katie wants to teach astrophysics
+- type: concept
+  name: KatieTeachAstrophysics
+  priority: 2
+
+- type: criteria
+  name: ConceptRTKatieTeachAstrophysics
+  fact: concept
+  match: '"KatieTeachAstrophysics"'
+
+- type: rule
+  name: KatieRTKatieTeachAstrophysics
+  criteria: IsKatie ConceptRTKatieTeachAstrophysics
+  responses: KatieRTKatieTeachAstrophysics
+
+- type: responsegroup
+  name: KatieRTKatieTeachAstrophysics
+  responses:
+    - responsetype: say
+      response: Ooh, we can study wormhole rotation!
+
+# katie said she wants to pat 'all of you'
+- type: concept
+  name: KatiePetAllofyou
+  priority: 2
+
+- type: criteria
+  name: ConceptRTKatiePetAllofyou
+  fact: concept
+  match: '"KatiePetAllofyou"'
+
+- type: rule
+  name: SarahRTKatiePetAllofyou
+  criteria: IsSarah KatieClose ConceptRTKatiePetAllofyou
+  responses: SarahRTKatiePetAllofyou
+
+- type: responsegroup
+  name: SarahRTKatiePetAllofyou
+  responses:
+    - responsetype: say
+      response: Mmm, just don't make me join in
+    - responsetype: say
+      response: You're taking a shower when we get home
+    - responsetype: say
+      response: F-fine... Wait, were you talking to me Kay?
+
+
+- type: rule
+  name: KatieIdleSarahClose
+  criteria: IsKatie ConceptIdle SarahClose NobodyTalkingNearby Chance95%
+  responses: KatieIdleSarahClose
+
+- type: responsegroup
+  name: KatieIdleSarahClose
+  responses:
+    - responsetype: say
+      response: Love you hun~
+    - responsetype: say
+      response: Oh yeah, Canning suspended Tryce
+    - responsetype: say
+      response: I love your new haircut, hun
+    - responsetype: say
+      response: Oh! Hun, remind me to grab rice on the way home
+    - responsetype: say
+      response: Don't you love these lil cuties?
+    - responsetype: say
+      response: We should visit the surface when we dock at Starfell, it'll be fuuun~
+      then: sarah KatieFlirtingSarah
+    - responsetype: say
+      response: Are your parents still on N'Terra Prime, hun?
+      then: sarah KatieParentsLocation
+    - responsetype: say
+      response: You should wear your cat ears tonight, hun~
+      then: sarah KatieFlirtingSarah
+    - responsetype: say
+      response: Wanna visit the RH bay later, hun~?
+      then: sarah KatieFlirtingSarah
+
+# katie said something that makes Sarah flutered
+- type: concept
+  name: KatieFlirtingSarah
+  priority: 2
+
+- type: criteria
+  name: ConceptRTKatieFlirtingSarah
+  fact: concept
+  match: '"KatieFlirtingSarah"'
+
+- type: rule
+  name: SarahRTKatieFlirtingSarah
+  criteria: IsSarah ConceptRTKatieFlirtingSarah
+  responses: SarahRTKatieFlirtingSarah
+
+- type: responsegroup
+  name: SarahRTKatieFlirtingSarah
+  responses:
+    - responsetype: say
+      response: K-Kay!
+    - responsetype: say
+      response: J-jeez, Kay...
+    - responsetype: say
+      response: Ack, not in public!
+    - responsetype: say
+      response: C-calm it, Kay
+    - responsetype: say
+      response: Grr, when we get home... I swear
+    - responsetype: say
+      response: Kaaay, please...
+    - responsetype: say
+      response: Hey! Bad girl!
+
+# katie asks about sarah's parents
+- type: concept
+  name: KatieParentsLocation
+  priority: 2
+
+- type: criteria
+  name: ConceptRTKatieParentsLocation
+  fact: concept
+  match: '"KatieParentsLocation"'
+
+- type: rule
+  name: SarahRTKatieParentsLocation
+  criteria: IsSarah ConceptRTKatieParentsLocation
+  responses: SarahRTKatieParentsLocation
+
+- type: responsegroup
+  name: SarahRTKatieParentsLocation
+  responses:
+    - responsetype: say
+      response: Yeah, they like the gravity there
+    - responsetype: say
+      response: Mhmm, wanna visit them for Festivus?
+    - responsetype: say
+      response: Always have been, always will be
+
+
+- type: rule
+  name: KatieIdlePlayerClose
+  criteria: IsKatie ConceptIdle PlayerClose NobodyTalkingNearby
+  responses: KatieIdlePlayerClose
+
+- type: responsegroup
+  name: KatieIdlePlayerClose
+  responses:
+    - responsetype: say
+      response: Awee, you came up to me!
+    - responsetype: say
+      response: Oh I love your fur
+    - responsetype: say
+      response: Who's a good kitty?
+    - responsetype: say
+      response: Who wants some petting?
+    - responsetype: say
+      response: You're much more calm than my kids
+
+
+- type: rule
+  name: KatieAction
+  criteria: IsKatie ConceptAction
+  responses: KatieAction
+
+- type: responsegroup
+  name: KatieAction
+  responses:
+    - responsetype: say
+      response: Awe, what a cutie
+    - responsetype: say
+      response: Hey there~
+    - responsetype: say
+      response: Howsa kitty?
+
+## Sarah
+#
+# Overworked navigator, scared of cats.
+
+- type: criteria
+  name: IsSarah
+  fact: who
+  match: '"sarah"'
+
+- type: criteria
+  name: SarahInCafe
+  fact: patronsarahInCafe
+  match: '1'
+
+- type: criteria
+  name: SarahClose
+  fact: patronsarahDistance
+  match: '<7'
+
+
+- type: rule
+  name: SarahIdle
+  criteria: IsSarah ConceptIdle NobodyTalkingNearby
+  responses: SarahIdle
+
+- type: responsegroup
+  name: SarahIdle
+  responses:
+    - responsetype: say
+      response: Finally some respite
+    - responsetype: say
+      response: Jeez, why are there so many cats around...
+      then: any SarahImScaredOfCat
+    - responsetype: say
+      response: Should we replot through the Zathurian wormhole?
+    - responsetype: say
+      response: Oh yeah, I need to call Space Traffic Control when I'm back on shift
+    - responsetype: say
+      response: Canning's nav circuits are on the fritz again
+    - responsetype: say
+      response: Urgh, another asteroid field ahead... Canning?
+    - responsetype: say
+      response: I'm convinced there's a hidden shortcut through the Kyrios Nebula
+      then: self SarahShortcutKyriosNebula
+    - responsetype: say
+      response: Spent all morning avoiding those nasty gravitational waves
+      then: self SarahGravitationalWaves
+    - responsetype: say
+      response: I hate it when the captain overrides my directions
+    - responsetype: say
+      response: I'm glad Katie doesn't need to deal with this
+      then: katie SarahTalkedBehindKatiesBack
+    - responsetype: say
+      response: We're lucky Canning caught that solar flare
+      then: any SarahCanningSolarFlare
+
+# sarah has a hidden shortcut
+- type: concept
+  name: SarahShortcutKyriosNebula
+  priority: 2
+
+- type: criteria
+  name: ConceptRTSarahShortcutKyriosNebula
+  fact: concept
+  match: '"SarahShortcutKyriosNebula"'
+
+- type: rule
+  name: SarahRTSarahShortcutKyriosNebula
+  criteria: IsSarah ConceptRTSarahShortcutKyriosNebula
+  responses: SarahRTSarahShortcutKyriosNebula
+
+- type: responsegroup
+  name: SarahRTSarahShortcutKyriosNebula
+  responses:
+    - responsetype: say
+      response: If only I can convince the captain...
+    - responsetype: say
+      response: I know it sounds crazy, but I've done the math
+    - responsetype: say
+      response: Katie believes me, at least
+
+# sarah was directing the ship through gravitational waves earlier
+- type: concept
+  name: SarahGravitationalWaves
+  priority: 2
+
+- type: criteria
+  name: ConceptRTSarahGravitationalWaves
+  fact: concept
+  match: '"SarahGravitationalWaves"'
+
+- type: rule
+  name: SarahRTSarahGravitationalWaves
+  criteria: IsSarah ConceptRTSarahGravitationalWaves
+  responses: SarahRTSarahGravitationalWaves
+
+- type: responsegroup
+  name: SarahRTSarahGravitationalWaves
+  responses:
+    - responsetype: say
+      response: Nasty stuff, almost wrecked our chronometer
+    - responsetype: say
+      response: Dang cross-spinning quasars
+    - responsetype: say
+      response: Couldn't even get a coffee 'til lunch
+    - responsetype: say
+      response: But bleh, normal for the Valor Quadrant
+    - responsetype: say
+      response: I think I got it right... I hope
+
+# Sarah said something about Katie while she was in the cafe
+- type: concept
+  name: SarahTalkedBehindKatiesBack
+  priority: 2
+
+- type: criteria
+  name: ConceptRTSarahTalkedBehindKatiesBack
+  fact: concept
+  match: '"SarahTalkedBehindKatiesBack"'
+
+- type: rule
+  name: KatieRTSarahTalkedBehindKatiesBack
+  criteria: IsKatie ConceptRTSarahTalkedBehindKatiesBack
+  responses: KatieRTSarahTalkedBehindKatiesBack
+
+- type: responsegroup
+  name: KatieRTSarahTalkedBehindKatiesBack
+  responses:
+    - responsetype: say
+      response: I heard that, hun!
+    - responsetype: say
+      response: Hun...
+    - responsetype: say
+      response: My ears are burning...
+    - responsetype: say
+      response: Huh?
+
+# Sarah mentioned a solar flare Canning saw
+- type: concept
+  name: SarahCanningSolarFlare
+  priority: 2
+
+- type: criteria
+  name: ConceptRTSarahCanningSolarFlare
+  fact: concept
+  match: '"SarahCanningSolarFlare"'
+
+- type: rule
+  name: SarahRTSarahCanningSolarFlare
+  criteria: IsSarah SarahClose ConceptRTSarahCanningSolarFlare
+  responses: SarahRTSarahCanningSolarFlare
+
+- type: responsegroup
+  name: SarahRTSarahCanningSolarFlare
+  responses:
+    - responsetype: say
+      response: It was touch-and-go for a while there...
+    - responsetype: say
+      response: That could have been bad
+    - responsetype: say
+      response: Lucky we didn't warp right into it
+
+- type: rule
+  name: CanningRTSarahCanningSolarFlare
+  criteria: IsCanning SarahClose ConceptRTSarahCanningSolarFlare
+  responses: CanningRTSarahCanningSolarFlare
+
+- type: responsegroup
+  name: CanningRTSarahCanningSolarFlare
+  responses:
+    - responsetype: say
+      response: All in a day's work
+    - responsetype: say
+      response: And you say my circuits are faulty
+
+- type: rule
+  name: TomRTSarahCanningSolarFlare
+  criteria: IsTom SarahClose ConceptRTSarahCanningSolarFlare
+  responses: TomRTSarahCanningSolarFlare
+
+- type: responsegroup
+  name: TomRTSarahCanningSolarFlare
+  responses:
+    - responsetype: say
+      response: Wait, what happened?
+    - responsetype: say
+      response: Is that why we had that hard pulse?
+    - responsetype: say
+      response: Oh, huh...
+
+- type: rule
+  name: LeeRTSarahCanningSolarFlare
+  criteria: IsLee SarahClose ConceptRTSarahCanningSolarFlare
+  responses: LeeRTSarahCanningSolarFlare
+
+- type: responsegroup
+  name: LeeRTSarahCanningSolarFlare
+  responses:
+    - responsetype: say
+      response: The Vargonians sent us an apology for that
+    - responsetype: say
+      response: It knocked out some our comms
+    - responsetype: say
+      response: Yeah, I don't envy your job
+
+
+- type: rule
+  name: SarahIdleKatieClose
+  criteria: IsSarah ConceptIdle KatieClose NobodyTalkingNearby Chance95%
+  responses: SarahIdleKatieClose
+
+- type: responsegroup
+  name: SarahIdleKatieClose
+  responses:
+    - responsetype: say
+      response: Love ya, Kay
+    - responsetype: say
+      response: I'm glad you like it here
+    - responsetype: say
+      response: Coming here beats getting one of our own
+    - responsetype: say
+      response: Let's have a date night tomorrow
+      then: katie SarahSuggestsDateNight
+    - responsetype: animation
+      response: emote-no
+    - responsetype: say
+      response: Seen Tom around, love? I need to put in a request
+    - responsetype: say
+      response: Jeez, you're unbelievable Kay...
+    - responsetype: say
+      response: You're so much cuter than me
+
+# Sarah mentioned having a date night
+- type: concept
+  name: SarahSuggestsDateNight
+  priority: 2
+
+- type: criteria
+  name: ConceptRTSarahSuggestsDateNight
+  fact: concept
+  match: '"SarahSuggestsDateNight"'
+
+- type: rule
+  name: KatieRTSarahSuggestsDateNight
+  criteria: IsKatie ConceptRTSarahSuggestsDateNight
+  responses: KatieRTSarahSuggestsDateNight
+
+- type: responsegroup
+  name: KatieRTSarahSuggestsDateNight
+  responses:
+    - responsetype: say
+      response: I'd love to, hun!
+    - responsetype: say
+      response: What do you call this, love~?
+    - responsetype: say
+      response: Why not~?
+    - responsetype: say
+      response: Oh, you might be too tired for that hun~
+      then: sarah KatieFlirtingSarah
+    - responsetype: say
+      response: With a cute thing like you~? Of course!
+      then: sarah KatieFlirtingSarah
+    - responsetype: say
+      response: Any time, love~
+
+
+- type: rule
+  name: SarahIdlePlayerClose
+  criteria: IsSarah ConceptIdle PlayerClose NobodyTalkingNearby
+  responses: SarahIdlePlayerClose
+
+- type: responsegroup
+  name: SarahIdlePlayerClose
+  responses:
+    - responsetype: say
+      response: Don't come that close, jeez
+    - responsetype: say
+      response: H-hi there, cat...
+      then: any SarahImScaredOfCat
+    - responsetype: say
+      response: Hey, stay away from my star chart!
+    - responsetype: say
+      response: Ack, go play with someone else
+      then: any SarahImScaredOfCat
+
+# sarah being scared of kitty :<
+- type: concept
+  name: SarahImScaredOfCat
+  description: ''
+  priority: 2
+
+- type: concept
+  name: SarahScaredCatReassure
+  description: ''
+  priority: 2
+
+- type: criteria
+  name: ConceptRTSarahScaredOfCat
+  fact: concept
+  match: '"SarahImScaredOfCat"'
+
+- type: rule
+  name: KatieRTSarahScaredOfCat
+  criteria: IsKatie ConceptRTSarahScaredOfCat SarahClose
+  responses: KatieRTSarahScaredCat
+
+- type: responsegroup
+  name: KatieRTSarahScaredCat
+  responses:
+    - responsetype: say
+      response: No need to be scared, Sarah
+      then: sarah SarahScaredCatReassure
+    - responsetype: say
+      response: Come on, hun
+    - responsetype: say
+      response: Relax, hun
+    - responsetype: say
+      response: They're just saying hello
+      then: sarah SarahScaredCatReassure
+
+- type: criteria
+  name: ConceptRTScaredCatReassure
+  fact: concept
+  match: '"SarahScaredCatReassure"'
+
+- type: rule
+  name: SarahRTCatReassure
+  criteria: IsSarah ConceptRTScaredCatReassure
+  responses: SarahRTScaredCatReassure
+
+- type: responsegroup
+  name: SarahRTScaredCatReassure
+  responses:
+    - responsetype: say
+      response: Well... I guess so...
+    - responsetype: say
+      response: O-okay, if you say so...
+
+
+- type: rule
+  name: SarahAction
+  criteria: IsSarah ConceptAction
+  responses: SarahAction
+
+- type: responsegroup
+  name: SarahAction
+  responses:
+    - responsetype: say
+      response: Uhm... want to be pet?
+    - responsetype: say
+      response: What's up with this cat
+    - responsetype: say
+      response: Fine, I'll pet you I guess
