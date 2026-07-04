@@ -3,7 +3,7 @@
 # and Game Logic"
 # 
 # to convert this file to json the game engine can load, run this in the root:
-#   yq -o=json assets/pureville/grs/sources/base.grs.yaml > assets/pureville/grs/base.grs-json
+#   yq -o=json eg/sources/base.grs.yaml > eg/base.grs-json
 
 # yaml-language-server: $schema=grs-schema.json
 
