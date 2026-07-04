@@ -7,7 +7,7 @@ var import_rules_csv_plugin
 var import_responses_csv_plugin
 var import_json_plugin
 
-const AUTOLOAD_NAME = "GodotResponseSystem"
+const AUTOLOAD_NAME = "Grs"
 
 func _enter_tree():
 	# add importers

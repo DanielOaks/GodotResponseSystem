@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema#",
+  "title": "Godot Response System",
+  "description": "Data for the Godot Response System",
+  "type": "array",
+  "items": {
+    "oneOf": [
+      {
+        "type": "object",
+        "description": "Concept, describes why the system is being queried",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "concept"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the concept, e.g. IdleBark, GotHit, PlayerStare"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable description of the concept. For example, actor is idle, actor just got hit"
+          },
+          "priority": {
+            "description": "Concepts default to a priority of `0`. Concepts with a higher priority (`1`, `2`, `3`, etc) will interrupt concepts with a lower priority (for example, to let a death noise interrupt normal dialogue). If `nopriority` is given as a concept's priority, that concept will never interrupt any other speech and the system will act as though no event is happening when other responses check for activity.",
+            "default": 0,
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string",
+                "description": "This concept will never interrupt any other speech and the system will act as though no event is happening when other responses check for activity",
+                "const": "nopriority"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "description"
+        ]
+      },
+      {
+        "type": "object",
+        "description": "Criteria, describes a set of matching facts",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "criteria"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the criteria set, e.g. NobodyTalkingNearby, Walking, OnPath. Always from the perspective of the actor being queried"
+          },
+          "matches": {
+            "type": "object",
+            "description": "Set of fact comparisons. E.g. '\"hurt\"' matches if the fact is the string \"hurt\", '<30' matches if the fact is under 30, '>=10' matches if the fact is over or equal to 10",
+            "minProperties": 1
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "matches"
+        ]
+      },
+      {
+        "type": "object",
+        "description": "Rule, set of criteria when, if matched, trigger one or more responses",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "rule"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the rule, e.g. KatieIdle, MedicGotHurt. Usually prefixed with the name of the actor this rule targets"
+          },
+          "criteria": {
+            "type": "string",
+            "description": "Space-separated list of criteria to require"
+          },
+          "responses": {
+            "type": "string",
+            "description": "Space-separated list of response groups to trigger"
+          },
+          "flags": {
+            "type": "array",
+            "description": "Optional flags for this rule to follow, e.g. matchonce (deactivate after triggering), etc",
+            "items": {
+              "type": "string"
+            }
+          },
+          "apply_actor_facts": {
+            "type": "object",
+            "description": "Facts to apply to this actor once the rule has been triggered, e.g. '\"asdf\"' sets the string to a new value, '-1' would subtract one from a number, '+50%' adds 50% to a number"
+          },
+          "apply_world_facts": {
+            "type": "object",
+            "description": "Facts to apply to the world once the rule has been triggered, e.g. '\"asdf\"' sets the string to a new value, '-1' would subtract one from a number, '+50%' adds 50% to a number"
+          }
+        },
+        "required": [
+          "name",
+          "criteria",
+          "responses"
+        ]
+      },
+      {
+        "type": "string"
+      },
+      {
+        "type": "object",
+        "description": "Response group, has one or more responses to a matched rule",
+        "minProperties": 1,
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "responsegroup"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the response group, e.g. KatieIdle, MedicGotHit, SarahRTKatiePetAllofyou"
+          },
+          "responses": {
+            "type": "array",
+            "description": "Responses to choose from",
+            "items": {
+              "type": "object",
+              "properties": {
+                "responsetype": {
+                  "type": "string",
+                  "description": "Type of response, e.g. `say`"
+                },
+                "response": {
+                  "type": "string",
+                  "description": "If `say`, the words to say."
+                },
+                "then": {
+                  "type": "string",
+                  "description": "After the response, output to the given actor the given concept, e.g. `then: sarah KatieFlirtingSarah`",
+                  "pattern": "^\\S+ \\S+$"
+                },
+                "flags": {
+                  "type": "array",
+                  "description": "Optional flags for this response to follow, e.g. matchonce (deactivate after triggering), etc",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "busyfor": {
+                  "type": "number",
+                  "description": "Number of seconds to be busy for"
+                },
+                "tree": {
+                  "type": "object",
+                  "description": "Dialogue tree, set of nodes",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "conditional_jumps": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "criteria": {
+                              "type": "object",
+                              "description": "Facts to match, same as matched in the criteria"
+                            },
+                            "jump_to": {
+                              "type": "string",
+                              "description": "Node to jump to"
+                            }
+                          },
+                          "required": [
+                            "criteria",
+                            "jump_to"
+                          ]
+                        }
+                      },
+                      "text": {
+                        "description": "What to say for this node. If this is a list of strings, choose one randomly",
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        ]
+                      },
+                      "choices": {
+                        "type": "array",
+                        "description": "Decisions the player can make",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "label": {
+                              "type": "string",
+                              "description": "How the option is displayed"
+                            },
+                            "jump_to": {
+                              "type": "string",
+                              "description": "Node to jump to"
+                            }
+                          },
+                          "required": [
+                            "label",
+                            "jump_to"
+                          ]
+                        }
+                      },
+                      "apply_world_facts": {
+                        "type": "object",
+                        "description": "Facts to apply to the world"
+                      },
+                      "scene_action": {
+                        "type": "string"
+                      },
+                      "sound_event": {
+                        "type": "string"
+                      },
+                      "jump_to": {
+                        "type": "string",
+                        "description": "Node to jump to, `END` ends the dialogue tree"
+                      }
+                    }
+                  }
+                }
+              },
+              "required": [
+                "responsetype"
+              ]
+            }
+          }
+        },
+        "required": [
+          "responses"
+        ]
+      }
+    ]
+  }
+}

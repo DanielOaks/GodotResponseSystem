@@ -1,0 +1,230 @@
+[
+  {
+    "type": "concept",
+    "name": "idlebark",
+    "description": "actor is idling, actors send this out now and then"
+  },
+  {
+    "type": "concept",
+    "name": "stare",
+    "description": "player has been looking at us for a while",
+    "priority": 1
+  },
+  {
+    "type": "concept",
+    "name": "action",
+    "description": "player has pressed the 'use' key on us",
+    "priority": 3
+  },
+  {
+    "type": "criteria",
+    "name": "ConceptIdle",
+    "matches": {
+      "concept": "\"idlebark\""
+    }
+  },
+  {
+    "type": "criteria",
+    "name": "ConceptStare",
+    "matches": {
+      "concept": "\"stare\""
+    }
+  },
+  {
+    "type": "criteria",
+    "name": "ConceptAction",
+    "matches": {
+      "concept": "\"action\""
+    }
+  },
+  {
+    "type": "criteria",
+    "name": "PlayerClose",
+    "matches": {
+      "playerDistance": "<5"
+    }
+  },
+  {
+    "type": "criteria",
+    "name": "Disabled",
+    "matches": {
+      "nofactatall": "\"disabledfordebugging\""
+    }
+  },
+  {
+    "type": "criteria",
+    "name": "Chance1%",
+    "matches": {
+      "randomnum": "<=1"
+    },
+    "weight": 22
+  },
+  {
+    "type": "criteria",
+    "name": "Chance2%",
+    "matches": {
+      "randomnum": "<=2"
+    },
+    "weight": 21
+  },
+  {
+    "type": "criteria",
+    "name": "Chance3%",
+    "matches": {
+      "randomnum": "<=3"
+    },
+    "weight": 20
+  },
+  {
+    "type": "criteria",
+    "name": "Chance5%",
+    "matches": {
+      "randomnum": "<=5"
+    },
+    "weight": 19
+  },
+  {
+    "type": "criteria",
+    "name": "Chance10%",
+    "matches": {
+      "randomnum": "<=10"
+    },
+    "weight": 18
+  },
+  {
+    "type": "criteria",
+    "name": "Chance15%",
+    "matches": {
+      "randomnum": "<=15"
+    },
+    "weight": 17
+  },
+  {
+    "type": "criteria",
+    "name": "Chance20%",
+    "matches": {
+      "randomnum": "<=20"
+    },
+    "weight": 16
+  },
+  {
+    "type": "criteria",
+    "name": "Chance25%",
+    "matches": {
+      "randomnum": "<=25"
+    },
+    "weight": 15
+  },
+  {
+    "type": "criteria",
+    "name": "Chance30%",
+    "matches": {
+      "randomnum": "<=30"
+    },
+    "weight": 14
+  },
+  {
+    "type": "criteria",
+    "name": "Chance35%",
+    "matches": {
+      "randomnum": "<=35"
+    },
+    "weight": 13
+  },
+  {
+    "type": "criteria",
+    "name": "Chance40%",
+    "matches": {
+      "randomnum": "<=40"
+    },
+    "weight": 12
+  },
+  {
+    "type": "criteria",
+    "name": "Chance45%",
+    "matches": {
+      "randomnum": "<=45"
+    },
+    "weight": 11
+  },
+  {
+    "type": "criteria",
+    "name": "Chance50%",
+    "matches": {
+      "randomnum": "<=50"
+    },
+    "weight": 10
+  },
+  {
+    "type": "criteria",
+    "name": "Chance55%",
+    "matches": {
+      "randomnum": "<=55"
+    },
+    "weight": 9
+  },
+  {
+    "type": "criteria",
+    "name": "Chance60%",
+    "matches": {
+      "randomnum": "<=60"
+    },
+    "weight": 8
+  },
+  {
+    "type": "criteria",
+    "name": "Chance65%",
+    "matches": {
+      "randomnum": "<=65"
+    },
+    "weight": 7
+  },
+  {
+    "type": "criteria",
+    "name": "Chance70%",
+    "matches": {
+      "randomnum": "<=70"
+    },
+    "weight": 6
+  },
+  {
+    "type": "criteria",
+    "name": "Chance75%",
+    "matches": {
+      "randomnum": "<=75"
+    },
+    "weight": 5
+  },
+  {
+    "type": "criteria",
+    "name": "Chance80%",
+    "matches": {
+      "randomnum": "<=80"
+    },
+    "weight": 0
+  },
+  {
+    "type": "criteria",
+    "name": "Chance85%",
+    "matches": {
+      "randomnum": "<=85"
+    },
+    "weight": 0
+  },
+  {
+    "type": "criteria",
+    "name": "Chance90%",
+    "matches": {
+      "randomnum": "<=90"
+    },
+    "weight": 0
+  },
+  {
+    "type": "criteria",
+    "name": "Chance95%",
+    "matches": {
+      "randomnum": "<=95"
+    },
+    "weight": 0
+  }
+]

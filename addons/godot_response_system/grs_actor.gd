@@ -1,3 +1,4 @@
+@icon("res://addons/godot_response_system/icons/human.svg")
 class_name GrsActor
 extends Node
 ## Represents an entity (NPC, object, etc) that can receive and emit responses.
@@ -6,14 +7,19 @@ extends Node
 ## [b]GrsActor[/b] can automatically emit idle queries now and then, which makes incidental dialogue
 ## and actions super simple to implement.
 
+const GrsConcept = preload("res://addons/godot_response_system/grs_concept.gd")
+
 ## Emitted when a new response is ready from GRS.
 signal response(type: String, content: String)
 
 ## Emitted when we are no longer marked busy.
 signal no_longer_busy()
 
+func _log(...message: Array):
+	print("GRS Actor: " + " ".join(message.map(str)))
+
 ## Unique key to refer to this actor. This is based on the actor name.
-var key: String :
+var key: String:
 	get:
 		return actor_name.strip_edges().to_lower()
 
@@ -44,24 +50,40 @@ var key: String :
 ## will fire.
 @export var idle_trigger_chance: float = 1.0
 
-var _grs: GRS
 var _idle_timer: Timer
 
 var _busy_priority_level = -999
 var _busy_reset_timer: Timer
 
-## This actor's facts.
-## [b]NOTE:[/b] May be removed later, as this seems difficult to save between sessions.
-var facts: GrsFacts
+## Actor facts
+var fact_getter: Callable
+var fact_setter: Callable
+
+
+# Get facts from, and save facts to, the actor fact store
+func register_actor_facts(getter: Callable, setter: Callable) -> void:
+	fact_getter = getter
+	fact_setter = setter
+
+
+## Safe wrapper to get an actor fact
+func get_fact(key: String) -> Variant:
+	if fact_getter.is_valid():
+		return fact_getter.call(key)
+	return null
+
+
+## Safe wrapper to set an actor fact
+func set_fact(key: String, value: Variant) -> void:
+	if fact_setter.is_valid():
+		fact_setter.call(key, value)
 
 ## Connect a function here which returns this actor's facts. This function takes one parameter,
 ## the actor which calls it.
 var get_query_facts: Callable
 
-func _enter_tree():
-	# create facts
-	facts = GrsFacts.new()
 
+func _enter_tree():
 	# create idle timer
 	_idle_timer = Timer.new()
 	add_child(_idle_timer)
@@ -81,22 +103,24 @@ func _enter_tree():
 		_idle_timer.start(time_to_wait)
 
 	# add self to GRS
-	_grs = get_node("/root/GodotResponseSystem")
 	if auto_add_to_grs:
-		_grs.add_actor(self)
+		Grs.add_actor(self)
+
 
 func _exit_tree():
 	# remove self from GRS
-	_grs.remove_actor(self)
+	Grs.remove_actor(self)
 
 	# stop idle timer
 	_idle_timer.stop()
+
 
 # Seconds to wait before next idle bark.
 func _idle_wait_time() -> float:
 	var next_wait_time := idle_period
 	next_wait_time += randf() * idle_jitter
 	return next_wait_time
+
 
 ## Emit an idle query to [GRS]. Automatically called if [param dispatch_barks] is true.
 func emit_idle():
@@ -108,14 +132,17 @@ func emit_idle():
 	if dispatch_barks:
 		_idle_timer.start(_idle_wait_time())
 
+
 # Lets us dispatch any and all queries again.
 func _emit_not_busy():
 	emit_signal("no_longer_busy")
 	_busy_priority_level = -999
 
+
 ## Returns how many seconds we'll still be busy for.
 func busy_time_left() -> float:
 	return _busy_reset_timer.time_left
+
 
 ## Sends an event to [GRS] for evaluation, after waiting for the delay.
 ## Returns true if a response is generated, but probably don't wait for that time to pass...
@@ -123,13 +150,14 @@ func dispatch_after(concept: String, delay_seconds: float) -> bool:
 	await get_tree().create_timer(delay_seconds).timeout
 	return await dispatch(concept)
 
+
 ## Sends an event to [GRS] for evaluation. Returns true if a response is generated.
 func dispatch(concept: String) -> bool:
 	# check concept priority
 	var concept_key = concept.strip_edges().to_lower()
-	var c: GrsConcept = _grs.concepts.get(concept_key)
+	var c: GrsConcept = Grs.concepts.get(concept_key)
 	if c == null:
-		print("[GRS] Concept ", concept, " is not defined, ignoring dispatch request")
+		_log("Concept ", concept, " is not defined, ignoring dispatch request")
 		return false
 
 	if _busy_reset_timer.is_stopped() or _busy_priority_level == -999 or c.priority > _busy_priority_level:
@@ -147,15 +175,15 @@ func dispatch(concept: String) -> bool:
 
 	q.facts.set_fact("who", key)
 	q.facts.set_fact("concept", concept_key)
-	q.extra_fact_dictionaries.append(facts)
 
 	# execute query
-	var response_generated = await _grs.execute_query(q, self)
+	var response_generated = await Grs.execute_query(q, self)
 
 	# set priority level, timer controls whether or not this is used above so this is fine
 	_busy_priority_level = c.priority
 
 	return response_generated
+
 
 ## Emits the given response from this actor. This is used by [GRS] when the actor receives
 ## a response.

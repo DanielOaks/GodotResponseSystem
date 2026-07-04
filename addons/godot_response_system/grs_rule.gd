@@ -1,4 +1,3 @@
-class_name GrsRule
 extends Resource
 
 @export var cname: String

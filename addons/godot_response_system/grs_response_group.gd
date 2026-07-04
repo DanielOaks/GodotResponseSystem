@@ -1,4 +1,3 @@
-class_name GrsResponseGroup
 extends Resource
 
 @export var cname: String

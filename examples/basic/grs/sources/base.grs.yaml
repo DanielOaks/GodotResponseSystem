@@ -1,0 +1,328 @@
+# Godot Response System (GRS) is designed after Valve's response system used in the
+# Source engine, and is described in the GDC talk "Rule Databases for Contextual Dialog
+# and Game Logic"
+# 
+# to convert this file to json the game engine can load, run this in the root:
+#   yq -o=json assets/pureville/grs/sources/base.grs.yaml > assets/pureville/grs/base.grs-json
+
+# yaml-language-server: $schema=grs-schema.json
+
+# == BASICS ==
+# GRS is a fuzzy rule matching system, comparing facts to select which response is most
+# specific and valid currently.
+#
+# Calling flow:
+# 1. Something happens in game engine (e.g. 'actor is hit', 'actor is idle').
+# 2. Affected actor sends a query (concept + set of facts) to GRS.
+# 3. GRS checks all the rules it has loaded against the facts in the query, as well as
+#    any other fact dictionaries that apply (for the world, actor, etc).
+# 4. Based on the comparison, GRS matches the most specific rule. GRS selects a response
+#    from the response group that rule points to.
+# 5. The actor emits a signal with the response!
+# 6. (optionally) GRS makes more queries based on 'then' rules.
+#
+# Here are the core parts of the system to know:
+# - Concepts
+# - Criteria
+# - Rules
+# - Responses
+# - Dialogue trees
+
+# == CONCEPT ==
+# - type: concept
+#   name: 
+#   description: 
+#   priority: 0
+#
+# Why the system is being queried. These are events the programmers need to send to GRS
+# for it to work, e.g. 'IdleBark' (actor is idle), 'GotHit' (actor just got hit).
+# 
+# Concepts default to a priority of `0`. Concepts with a higher priority (`1`, `2`,
+# `3`, etc) will interrupt concepts with a lower priority (for example, to let a death
+# noise interrupt normal dialogue).
+# If `nopriority` is given as a concept's priority, that concept will never interrupt
+# any other speech and the system will act as though no event is happening when other
+# responses check for activity.
+
+# == CRITERIA ==
+# - type: criteria
+#   name: 
+#   matches:
+#     fact1: 'comparison'
+#     fact2: 'comparison'
+#
+# Named true/false check, used to create rules. For example, the criterion
+# `PlayerNearby` may be true if `playerDistance<300`. Criteria are calculated once and
+# then used by multiple rules, which helps with performance as the ruleset grows.
+#
+# 'fact' is the name of a fact to compare against, and 'comparison' is the value to
+# match against that fact. For example, 'playerDistance' and '<300' would match if the
+# player is close to the actor sending the query.
+#
+# Match values can be prefixed with ! or != to invert them, and can use this syntax:
+# - '"hurt"' = true if the fact is the string "hurt".
+# - '<30' = true if the fact is a number under 30.
+# - '>=10' = true if the fact is a number ten or above.
+#
+# Default facts:
+# - concept: The concept that initiated this query.
+# - randomnum: Random float from 0 to 100, calculated once for each match.
+
+# == RULE ==
+# - type: rule
+#   name: 
+#   criteria: 
+#   responses: 
+#   flags: 
+#   apply_actor_facts: 
+#     state: '"hurt"'
+#     ttl: '-50%'
+#     lives: '-1'
+#   apply_world_facts: 
+#
+# Set of one or more criteria to match, and one or more response groups to trigger. The
+# 'rule database' is what GRS compares incoming queries against.
+#
+# The criteria and responses list is separated by spaces, e.g. "IsSarah KatieNearby".
+#
+# For simplicity, try to start a rule's name off with the entity it's evaluated on.
+# E.g. Name a rule checking whether a character called Em is idle "EmIdle".
+
+# == RESPONSES ==
+# - type: responsegroup
+#   name: 
+#   flags: 
+#   responses:
+#     - responsetype: 
+#       response: 
+#       flags: 
+#       then: <actor|all> <concept>
+#       busyfor: 4.0
+#
+# How actors respond once a rule is matched. These include the lines of text to say,
+# actions to take, and more. GRS will pick one of the responses randomly from the group.
+#
+# When 'then' is given, GRS fires this new criteria on the given actor once the busy
+# time has passed. 'any' to test every nearby actor, and GRS will stop once an actor
+# does a response.
+# See https://youtu.be/tAbBID3N64A?t=3341 for details.
+#
+# Response types:
+# - say: Say a line of text
+# - animation: Play the given animation
+# - sequence: Start the given sequence
+# - dialogue_tree: Start a dialogue tree
+
+# == DIALOGUE TREES ==
+# - responsetype: dialogue_tree
+#     tree:
+#     # start
+#         start:
+#             conditional_jumps:
+#                 - matches:
+#                         gig_accepted: '"true"'
+#                     jump_to: start_hyped
+#             text: 
+#                 - "Yo! You spinning that new DJ equipment for us?"
+#                 - "Hey! Gonna DJ for us later?"
+#             choices:
+#                 - label: "Of course!"
+#                     jump_to: node_accept
+#                 - label: "Sorry, I've gotta practice some more."
+#                     jump_to: finally_bye
+#         start_hyped:
+#             text: "Can't wait for your set tonight!"
+#             choices:
+#                 - label: "See you there."
+#                     jump_to: finally_bye
+#     # regular nodes
+#         node_accept:
+#             text: "Sick! The crowd is gonna go wild."
+#             apply_world_facts:
+#                 gig_accepted: '"true"'
+#             scene_action: "anim_cheer"
+#             sound_event: "sfx_airhorn"
+#             jump_to: finally_bye
+#     # bye
+#         finally_bye:
+#             text:
+#                 - "Catch you later!"
+#                 - "Cyaaa!"
+#             jump_to: END
+#
+# Dialogue trees let you start conversations with actors. Think a tiny VN-like segment
+# intersperced into your game, that's what this lets you do.
+#
+# The `start` node is always where things start. It's convention to start with nodes
+# named `start_*`, then `node_*`, and finish things off with nodes named `finally_*`.
+# Also, jumping to `END` means the dialogue is over.
+#
+# First:
+# - conditional_jumps: If all of the given facts match, jump to this node immediately.
+# Optionally, you can: (all of these are done at the same time)
+# - actor: Actor to do the below as.
+# - text: Text to display. If this is a list, choose a random line to display.
+# - apply_actor_facts: Apply facts to actor.
+# - apply_world_facts: Apply facts to world.
+# - sound: Play the given sound.
+# - anim: Trigger a skeletal animation.
+# - anim_face: Trigger a facial expression or blend shape.
+# To exit the node, you have two options:
+# - choices: Choices to display to the player. Then jump to the given node.
+# - jump_to: Node to jump to, if choices do not exist.
+
+
+## core concepts
+#
+- type: concept
+  name: idlebark
+  description: actor is idling, actors send this out now and then
+- type: concept
+  name: stare
+  description: player has been looking at us for a while
+  priority: 1
+- type: concept
+  name: action
+  description: player has pressed the 'use' key on us
+  priority: 3
+
+- type: criteria
+  name: ConceptIdle
+  matches:
+    concept: '"idlebark"'
+- type: criteria
+  name: ConceptStare
+  matches:
+    concept: '"stare"'
+- type: criteria
+  name: ConceptAction
+  matches:
+    concept: '"action"'
+
+# basic shared criteria
+#
+- type: criteria
+  name: PlayerClose
+  matches:
+    playerDistance: '<5'
+
+- type: criteria
+  name: Disabled
+  matches:
+    nofactatall: '"disabledfordebugging"'
+
+# these criteria let you add random chances for rare dialogue, etc.
+#
+# more rare ones have higher weights to ensure they'll be picked before any other
+# potential options, but once it reaches 80% we're just gambling with falling back so
+# we eliminate the weight on those
+- type: criteria
+  name: Chance1%
+  matches:
+    randomnum: '<=1'
+  weight: 22
+- type: criteria
+  name: Chance2%
+  matches:
+    randomnum: '<=2'
+  weight: 21
+- type: criteria
+  name: Chance3%
+  matches:
+    randomnum: '<=3'
+  weight: 20
+- type: criteria
+  name: Chance5%
+  matches:
+    randomnum: '<=5'
+  weight: 19
+- type: criteria
+  name: Chance10%
+  matches:
+    randomnum: '<=10'
+  weight: 18
+- type: criteria
+  name: Chance15%
+  matches:
+    randomnum: '<=15'
+  weight: 17
+- type: criteria
+  name: Chance20%
+  matches:
+    randomnum: '<=20'
+  weight: 16
+- type: criteria
+  name: Chance25%
+  matches:
+    randomnum: '<=25'
+  weight: 15
+- type: criteria
+  name: Chance30%
+  matches:
+    randomnum: '<=30'
+  weight: 14
+- type: criteria
+  name: Chance35%
+  matches:
+    randomnum: '<=35'
+  weight: 13
+- type: criteria
+  name: Chance40%
+  matches:
+    randomnum: '<=40'
+  weight: 12
+- type: criteria
+  name: Chance45%
+  matches:
+    randomnum: '<=45'
+  weight: 11
+- type: criteria
+  name: Chance50%
+  matches:
+    randomnum: '<=50'
+  weight: 10
+- type: criteria
+  name: Chance55%
+  matches:
+    randomnum: '<=55'
+  weight: 9
+- type: criteria
+  name: Chance60%
+  matches:
+    randomnum: '<=60'
+  weight: 8
+- type: criteria
+  name: Chance65%
+  matches:
+    randomnum: '<=65'
+  weight: 7
+- type: criteria
+  name: Chance70%
+  matches:
+    randomnum: '<=70'
+  weight: 6
+- type: criteria
+  name: Chance75%
+  matches:
+    randomnum: '<=75'
+  weight: 5
+- type: criteria
+  name: Chance80%
+  matches:
+    randomnum: '<=80'
+  weight: 0
+- type: criteria
+  name: Chance85%
+  matches:
+    randomnum: '<=85'
+  weight: 0
+- type: criteria
+  name: Chance90%
+  matches:
+    randomnum: '<=90'
+  weight: 0
+- type: criteria
+  name: Chance95%
+  matches:
+    randomnum: '<=95'
+  weight: 0
